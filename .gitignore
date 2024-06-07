@@ -31,6 +31,6 @@ coverage.*
 *.iml
 
 # Temporary files for developer debug
-.tmp/
+tmp/
 
 
