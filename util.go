@@ -9,9 +9,29 @@ package crossplane
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"sort"
 	"strings"
 	"unicode"
 )
+
+const (
+	// extract single directive definition block
+	extractNgxDirectiveArrayRegex = "ngx_command_t\\s+\\w+\\[\\]\\s*=\\s*{(.*?)};"
+	// extract one directive definition and attributes from extracted block,
+	extractNgxSingleDirectiveRegex = "ngx_string\\(\"(.*?)\"\\).*?,(.*?),"
+)
+
+var specialBitmaskNameMatch = map[string]string{
+	"HTTP":   "HTTP",
+	"1MORE":  "1More",
+	"2MORE":  "2More",
+	"NOARGS": "NoArgs",
+}
 
 type included struct {
 	directive *Directive
@@ -169,4 +189,173 @@ func performIncludes(old *Payload, fromfile string, block Directives) chan inclu
 		}
 	}()
 	return c
+}
+
+// extract directives from a source code through regex. Key of the return map is directive name, value of it is bitmask names
+// one directive can have different bitmasks, so the value of the map is two-dimensional array
+func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, error) {
+	directiveMap := make(map[string][][]string, 0)
+	directiveArrayExtracter := regexp.MustCompile(extractNgxDirectiveArrayRegex)
+	singleDirectiveExtracter := regexp.MustCompile(extractNgxSingleDirectiveRegex)
+
+	err := filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Check if the entry is a C/C++ file
+		// Some dynamic modules are written in C++, like otel
+		if !d.IsDir() && (strings.HasSuffix(path, ".c") || strings.HasSuffix(path, ".cpp")) {
+			byteContent, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			strContent := string(byteContent)
+			strContent = strings.ReplaceAll(strContent, "\r\n", "")
+			strContent = strings.ReplaceAll(strContent, "\n", "")
+			// extract directives definition blocks, each block contains an array of directives definition
+			directiveArrays := directiveArrayExtracter.FindAllStringSubmatch(strContent, -1)
+			// iterate through every block
+			for _, directiveArray := range directiveArrays {
+				// extract directives and their attributes in the block, the first dimension of directiveAttributesArray
+				// is index of directives, the second dimension is index of attributes
+				directiveAttributesArray := singleDirectiveExtracter.FindAllStringSubmatch(directiveArray[1], -1)
+				// iterate through every directive
+				for _, directiveAttributes := range directiveAttributesArray {
+					// extract attributes from the directive
+					directiveName := strings.TrimSpace(directiveAttributes[1])
+					diretiveBitmaskNames := strings.Split(directiveAttributes[2], "|")
+					for idx, bitmaskName := range diretiveBitmaskNames {
+						diretiveBitmaskNames[idx] = ngxBitmaskName2Go(strings.TrimSpace(bitmaskName))
+					}
+					if bitmaskNamesList, exist := directiveMap[directiveName]; exist {
+						bitmaskNamesList = append(bitmaskNamesList, diretiveBitmaskNames)
+						directiveMap[directiveName] = bitmaskNamesList
+					} else {
+						directiveMap[directiveName] = [][]string{diretiveBitmaskNames}
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(directiveMap) == 0 {
+		return nil, &BasicError{
+			reason: "can't find any directives in the directory and subdirectories, please check the path",
+		}
+	}
+
+	return directiveMap, nil
+}
+
+// change the C style const name to Go style. An example is
+// NGX_CONF_TAKE1 to ngxConfTake1
+func ngxBitmaskName2Go(ngxVarName string) string {
+	bitmasksNames := strings.Split(ngxVarName, "_")
+
+	for idx, bitMaskName := range bitmasksNames {
+		bitMaskName = strings.TrimSpace(bitMaskName)
+		if goName, inMap := specialBitmaskNameMatch[bitMaskName]; inMap {
+			bitmasksNames[idx] = goName
+		} else {
+			bitMaskNameRun := []rune(bitMaskName)
+
+			for charIdx, char := range bitMaskNameRun {
+				// the first charachter should be lowercase(private)
+				if idx == 0 && charIdx == 0 && char >= 'A' && char <= 'Z' {
+					bitMaskNameRun[charIdx] += 'a' - 'A'
+				}
+
+				// change remain part from uppercase to lowercase
+				if charIdx >= 1 && char >= 'A' && char <= 'Z' {
+					bitMaskNameRun[charIdx] += 'a' - 'A'
+				}
+			}
+			bitmasksNames[idx] = string(bitMaskNameRun)
+		}
+	}
+
+	return strings.Join(bitmasksNames, "")
+}
+
+func GetLineSeperator() string {
+	if runtime.GOOS == "windows" {
+		return "\r\n"
+	}
+	return "\n"
+}
+
+func GenerateSupportFileFromCode(codePath string, moduleName string, outputFilePath string) error {
+	directiveMap, err := extractDirectiveMapFromFolder(codePath)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(outputFilePath)
+	if err != nil {
+		return err
+	}
+
+	lineSeperator := GetLineSeperator()
+	_, err = file.WriteString("package crossplane" + lineSeperator)
+	if err != nil {
+		return err
+	}
+
+	file.WriteString(lineSeperator)
+	fmt.Println()
+
+	// make the first char in module name uppercaes, align with golang variable name conventions
+	moduleNameRunes := []rune(moduleName)
+	if moduleNameRunes[0] >= 'a' && moduleNameRunes[0] <= 'z' {
+		moduleNameRunes[0] += 'A' - 'a'
+	}
+	moduleName = string(moduleNameRunes)
+	mapVariableName := fmt.Sprintf("module%sDirectives", moduleName)
+	file.WriteString(fmt.Sprintf("var %s = map[string][]uint{%s", mapVariableName, lineSeperator))
+
+	// sort the directive names, just for easier search and stable output
+	directiveNames := make([]string, 0, len(directiveMap))
+	for name := range directiveMap {
+		directiveNames = append(directiveNames, name)
+	}
+	sort.Strings(directiveNames)
+
+	// generate directives map
+	for _, name := range directiveNames {
+		file.WriteString(fmt.Sprintf("\t\"%s\": {%s", name, lineSeperator))
+		bitmaskNamesList := directiveMap[name]
+		for _, bitmaskNames := range bitmaskNamesList {
+			bitmaskNameNum := len(bitmaskNames)
+			file.WriteString("\t\t")
+			for idx, bitmaskName := range bitmaskNames {
+				if idx > 0 {
+					file.WriteString("| ")
+				}
+				file.WriteString(bitmaskName)
+				if idx < bitmaskNameNum-1 {
+					file.WriteString(" ")
+				} else {
+					file.WriteString("," + lineSeperator)
+				}
+			}
+		}
+		file.WriteString("\t}," + lineSeperator)
+	}
+	file.WriteString("}" + lineSeperator)
+
+	// generate MatchFn
+	file.WriteString(lineSeperator)
+	file.WriteString(fmt.Sprintf("func Match%s(directive string) ([]uint, bool) {%s", moduleName, lineSeperator))
+	file.WriteString(fmt.Sprintf("\tmasks, matched := %s[directive]%s", mapVariableName, lineSeperator))
+	file.WriteString("\treturn masks, matched" + lineSeperator)
+	file.WriteString("}")
+	file.Close()
+	return nil
 }

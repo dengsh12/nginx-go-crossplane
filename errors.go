@@ -41,3 +41,12 @@ func (e *ParseError) MarshalJSON() ([]byte, error) {
 func (e *ParseError) Unwrap() error {
 	return e.originalErr
 }
+
+type BasicError struct {
+	reason string
+}
+
+// Error implements error.
+func (e *BasicError) Error() string {
+	return e.reason
+}
