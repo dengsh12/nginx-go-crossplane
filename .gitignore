@@ -30,5 +30,7 @@ coverage.*
 *.go-e
 *.iml
 
+# Temporary files for developer debug
+.tmp
 
 
