@@ -1,6 +1,6 @@
 package crossplane
 
-var moduleNPlusR31Directives = map[string][]uint{
+var moduleNgxPlusR31Directives = map[string][]uint{
 	"absolute_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
@@ -2232,7 +2232,7 @@ var moduleNPlusR31Directives = map[string][]uint{
 	},
 }
 
-func MatchNPlusR31(directive string) ([]uint, bool) {
-	masks, matched := moduleNPlusR31Directives[directive]
+func MatchNgxPlusR31(directive string) ([]uint, bool) {
+	masks, matched := moduleNgxPlusR31Directives[directive]
 	return masks, matched
 }

@@ -9,7 +9,13 @@ package crossplane
 
 import (
 	"fmt"
+	"reflect"
 )
+
+var ngxOssMatchFuns = map[uintptr]interface{}{reflect.ValueOf(MatchNgxOss1270).Pointer(): nil}
+var ngxPlusMatchFuns = map[uintptr]interface{}{reflect.ValueOf(MatchNgxPlusR31).Pointer(): nil}
+var latestOssMatchFn = MatchNgxOss1270
+var latestNPlusMatchFn = MatchNgxPlusR31
 
 // bit masks for different directive argument styles.
 const (
@@ -94,16 +100,51 @@ func enterBlockCtx(stmt *Directive, ctx blockCtx) blockCtx {
 
 //nolint:gocyclo,funlen,gocognit
 func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *ParseOptions) error {
-	masks, knownDirective := directives[stmt.Directive]
-	currCtx, knownContext := contexts[ctx.key()]
+	masks := make([]uint, 0)
+	knownDirective := false
+	directiveName := stmt.Directive
+	foundInForcedMap := false
 
-	if !knownDirective {
+	// try to find directive in forced_map first
+	if forcedMasks, found := forced_directives_map[directiveName]; found {
+		foundInForcedMap = true
+		masks = forcedMasks
+	}
+
+	// if a directive is not in forced_map, then try to find it through MatchFuncs
+	// if it is in forced_map, don't consider MatchFuncs any more
+	if !foundInForcedMap {
+		haveOssMatchFn := false
+		haveNPlusMatchFn := false
+
 		for _, matchFn := range options.MatchFuncs {
-			if masks, knownDirective = matchFn(stmt.Directive); knownDirective {
-				break
+			if _, isOssMatchFn := ngxOssMatchFuns[reflect.ValueOf(matchFn).Pointer()]; isOssMatchFn {
+				haveOssMatchFn = true
+			}
+			if _, isNPluseMatchFn := ngxPlusMatchFuns[reflect.ValueOf(matchFn).Pointer()]; isNPluseMatchFn {
+				haveNPlusMatchFn = true
+			}
+			if masksInFn, found := matchFn(directiveName); found {
+				masks = append(masks, masksInFn...)
+				knownDirective = true
+			}
+		}
+
+		if !haveOssMatchFn {
+			if masksInFn, found := latestOssMatchFn(directiveName); found {
+				masks = append(masks, masksInFn...)
+				knownDirective = true
+			}
+		}
+		if !haveNPlusMatchFn {
+			if masksInFn, found := latestNPlusMatchFn(directiveName); found {
+				masks = append(masks, masksInFn...)
+				knownDirective = true
 			}
 		}
 	}
+
+	currCtx, knownContext := contexts[ctx.key()]
 
 	// if strict and directive isn't recognized then throw error
 	if options.ErrorOnUnknownDirectives && !knownDirective {
