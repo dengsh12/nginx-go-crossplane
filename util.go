@@ -7,6 +7,8 @@
 
 package crossplane
 
+//go:generate go run ./scripts/generator.go 2 3
+
 import (
 	"fmt"
 	"io/fs"
@@ -21,8 +23,14 @@ import (
 
 const (
 	// extract single directive definition block
+	// static ngx_command_t  {name}[] = {definition}
+	// this regex extracts {name} and {definition}
 	extractNgxDirectiveArrayRegex = "ngx_command_t\\s+(\\w+)\\[\\]\\s*=\\s*{(.*?)};"
-	// extract one directive definition and attributes from extracted block,
+	// extract one directive definition and attributes from extracted block
+	// { ngx_string({directive_name}),
+	//   {bitmask1|bitmask2|...},
+	//   ... },
+	// this regex extracts {directive_name} and {bitmask1|bitmask2|...}
 	extractNgxSingleDirectiveRegex = "ngx_string\\(\"(.*?)\"\\).*?,(.*?),"
 )
 
