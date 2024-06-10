@@ -347,7 +347,7 @@ func GenerateSupportFileFromCode(codePath string, moduleName string, outputFileP
 	}
 
 	file.WriteString(lineSeperator)
-	fmt.Println()
+	file.WriteString("//nolint:gochecknoglobals" + lineSeperator)
 
 	// make the first char in module name uppercaes, align with golang variable name conventions
 	moduleNameRunes := []rune(moduleName)
