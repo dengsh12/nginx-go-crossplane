@@ -1,5 +1,6 @@
 package crossplane
 
+//nolint:gochecknoglobals
 var moduleNgxPlusR31Directives = map[string][]uint{
 	"absolute_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,

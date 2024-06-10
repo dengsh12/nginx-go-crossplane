@@ -1,5 +1,6 @@
 package crossplane
 
+//nolint:gochecknoglobals
 var moduleOtelDirectives = map[string][]uint{
 	"batch_count": {
 		ngxConfTake1,

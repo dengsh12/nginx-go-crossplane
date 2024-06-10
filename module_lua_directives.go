@@ -1,5 +1,6 @@
 package crossplane
 
+//nolint:gochecknoglobals
 var moduleLuaDirectives = map[string][]uint{
 	"access_by_lua": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConfTake1,

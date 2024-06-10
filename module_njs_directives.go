@@ -1,5 +1,6 @@
 package crossplane
 
+//nolint:gochecknoglobals
 var moduleNjsDirectives = map[string][]uint{
 	"js_access": {
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
