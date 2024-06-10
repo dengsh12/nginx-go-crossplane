@@ -341,6 +341,18 @@ func GenerateSupportFileFromCode(codePath string, moduleName string, outputFileP
 	}
 
 	lineSeperator := GetLineSeperator()
+	// Annotations
+	file.WriteString("// This is generated code, don't modify it." + lineSeperator)
+	file.WriteString("// If you want to overwrite any directive's definition, please modify forced_directives_map.go" + lineSeperator)
+	file.WriteString("// All the definitions are generated from the source code you provided" + lineSeperator)
+	file.WriteString("// Each bit mask describes these behaviors:" + lineSeperator)
+	file.WriteString("//   - how many arguments the directive can take" + lineSeperator)
+	file.WriteString("//   - whether or not it is a block directive" + lineSeperator)
+	file.WriteString("//   - whether this is a flag (takes one argument that's either \"on\" or \"off\")" + lineSeperator)
+	file.WriteString("//   - which contexts it's allowed to be in" + lineSeperator)
+
+	file.WriteString(lineSeperator)
+
 	_, err = file.WriteString("package crossplane" + lineSeperator)
 	if err != nil {
 		return err
