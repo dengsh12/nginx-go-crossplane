@@ -166,7 +166,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"connect_timeout": {
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"connection_pool_size": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
@@ -944,7 +944,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfFlag,
 	},
 	"mqtt_rewrite_buffer_size": {
-		/* obsolete */      ngxStreamSrvConf | ngxConfFlag,
+		/* obsolete */ ngxStreamSrvConf | ngxConfFlag,
 	},
 	"mqtt_set_connect": {
 		ngxStreamSrvConf | ngxConfTake2,
@@ -1351,7 +1351,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"read_timeout": {
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"real_ip_header": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
@@ -1381,7 +1381,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConf1More,
 		ngxHTTPUpsConf | ngxConf1More,
 		ngxMailMainConf | ngxMailSrvConf | ngxConf1More,
-		ngxConf1More,
+		ngxConf1More | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConf1More,
 		ngxStreamUpsConf | ngxConf1More,
 	},
@@ -1389,7 +1389,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 		ngxHTTPUpsConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 		ngxStreamUpsConf | ngxConfTake1,
 	},
@@ -1561,7 +1561,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 	},
 	"send_timeout": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"sendfile": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConfFlag,
@@ -1654,7 +1654,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"ssl": {
-		ngxConfFlag,
+		ngxConfFlag | ngxMgmtMainConf,
 	},
 	"ssl_alpn": {
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConf1More,
@@ -1665,19 +1665,19 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 	"ssl_certificate": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_certificate_key": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_ciphers": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_client_certificate": {
@@ -1693,7 +1693,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 	"ssl_crl": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_dhparam": {
@@ -1716,7 +1716,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_name": {
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"ssl_ocsp": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfFlag,
@@ -1730,7 +1730,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 	"ssl_password_file": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_prefer_server_ciphers": {
@@ -1744,14 +1744,14 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 	"ssl_protocols": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConf1More,
 		ngxMailMainConf | ngxMailSrvConf | ngxConf1More,
-		ngxConf1More,
+		ngxConf1More | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConf1More,
 	},
 	"ssl_reject_handshake": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfFlag,
 	},
 	"ssl_server_name": {
-		ngxConfFlag,
+		ngxConfFlag | ngxMgmtMainConf,
 	},
 	"ssl_session_cache": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake12,
@@ -1788,11 +1788,11 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 	"ssl_trusted_certificate": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_verify": {
-		ngxConfFlag,
+		ngxConfFlag | ngxMgmtMainConf,
 	},
 	"ssl_verify_client": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
@@ -1802,7 +1802,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 	"ssl_verify_depth": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1,
+		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"starttls": {
@@ -1883,7 +1883,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxStreamMainConf | ngxConfBlock | ngxConfTake1,
 	},
 	"usage_report": {
-		ngxConfNoArgs | ngxConfTake12,
+		ngxConfNoArgs | ngxConfTake12 | ngxMgmtMainConf,
 	},
 	"use": {
 		ngxEventConf | ngxConfTake1,
@@ -1919,7 +1919,7 @@ var moduleNgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"uuid_file": {
-		ngxConfNoArgs | ngxConfTake1,
+		ngxConfNoArgs | ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"uwsgi_bind": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake12,

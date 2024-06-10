@@ -21,7 +21,7 @@ import (
 
 const (
 	// extract single directive definition block
-	extractNgxDirectiveArrayRegex = "ngx_command_t\\s+\\w+\\[\\]\\s*=\\s*{(.*?)};"
+	extractNgxDirectiveArrayRegex = "ngx_command_t\\s+(\\w+)\\[\\]\\s*=\\s*{(.*?)};"
 	// extract one directive definition and attributes from extracted block,
 	extractNgxSingleDirectiveRegex = "ngx_string\\(\"(.*?)\"\\).*?,(.*?),"
 )
@@ -31,6 +31,28 @@ var specialBitmaskNameMatch = map[string]string{
 	"1MORE":  "1More",
 	"2MORE":  "2More",
 	"NOARGS": "NoArgs",
+}
+
+var allDirectiveContexts = map[string]interface{}{
+	"ngxMainConf":       nil,
+	"ngxEventConf":      nil,
+	"ngxMailMainConf":   nil,
+	"ngxMailSrvConf":    nil,
+	"ngxStreamMainConf": nil,
+	"ngxStreamSrvConf":  nil,
+	"ngxStreamUpsConf":  nil,
+	"ngxHTTPMainConf":   nil,
+	"ngxHTTPSrvConf":    nil,
+	"ngxHTTPLocConf":    nil,
+	"ngxHTTPUpsConf":    nil,
+	"ngxHTTPSifConf":    nil,
+	"ngxHTTPLifConf":    nil,
+	"ngxHTTPLmtConf":    nil,
+	"ngxMgmtMainConf":   nil,
+}
+
+var directiveBlock2Context = map[string]string{
+	"ngx_mgmt_block_commands": "ngxMgmtMainConf",
 }
 
 type included struct {
@@ -213,21 +235,37 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 			strContent := string(byteContent)
 			strContent = strings.ReplaceAll(strContent, "\r\n", "")
 			strContent = strings.ReplaceAll(strContent, "\n", "")
-			// extract directives definition blocks, each block contains an array of directives definition
+			// extract directives definition code blocks, each code block contains an array of directives definition
 			directiveArrays := directiveArrayExtracter.FindAllStringSubmatch(strContent, -1)
-			// iterate through every block
+			// iterate through every code block
 			for _, directiveArray := range directiveArrays {
-				// extract directives and their attributes in the block, the first dimension of directiveAttributesArray
+				// the name of the directives array in source code, it may be used as the context
+				directiveArrayName := directiveArray[1]
+				// extract directives and their attributes in the code block, the first dimension of directiveAttributesArray
 				// is index of directives, the second dimension is index of attributes
-				directiveAttributesArray := singleDirectiveExtracter.FindAllStringSubmatch(directiveArray[1], -1)
-				// iterate through every directive
+				directiveAttributesArray := singleDirectiveExtracter.FindAllStringSubmatch(directiveArray[2], -1)
+				// iterate through every directive definition
 				for _, directiveAttributes := range directiveAttributesArray {
 					// extract attributes from the directive
 					directiveName := strings.TrimSpace(directiveAttributes[1])
 					diretiveBitmaskNames := strings.Split(directiveAttributes[2], "|")
+					haveContext := false
+
 					for idx, bitmaskName := range diretiveBitmaskNames {
-						diretiveBitmaskNames[idx] = ngxBitmaskName2Go(strings.TrimSpace(bitmaskName))
+						bitmaskGoName := ngxBitmaskName2Go(strings.TrimSpace(bitmaskName))
+						diretiveBitmaskNames[idx] = bitmaskGoName
+						if _, found := allDirectiveContexts[bitmaskGoName]; found {
+							haveContext = true
+						}
 					}
+
+					if !haveContext {
+						context, found := directiveBlock2Context[directiveArrayName]
+						if found {
+							diretiveBitmaskNames = append(diretiveBitmaskNames, context)
+						}
+					}
+
 					if bitmaskNamesList, exist := directiveMap[directiveName]; exist {
 						bitmaskNamesList = append(bitmaskNamesList, diretiveBitmaskNames)
 						directiveMap[directiveName] = bitmaskNamesList

@@ -1689,7 +1689,7 @@ func TestParseVarArgs(t *testing.T) {
 }
 
 func TestParseIfExpr(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 	tcs := map[string]struct {
 		fn  string
 		err bool

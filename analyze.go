@@ -109,6 +109,7 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 	if forcedMasks, found := forced_directives_map[directiveName]; found {
 		foundInForcedMap = true
 		masks = forcedMasks
+		knownDirective = true
 	}
 
 	// if a directive is not in forced_map, then try to find it through MatchFuncs
