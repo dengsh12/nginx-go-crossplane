@@ -344,6 +344,12 @@ func GenerateSupportFileFromCode(codePath string, moduleName string, outputFileP
 		return err
 	}
 
+	directory := filepath.Dir(outputFilePath)
+	err = os.MkdirAll(directory, 0777)
+	if err != nil {
+		return err
+	}
+
 	file, err := os.Create(outputFilePath)
 	if err != nil {
 		return err
