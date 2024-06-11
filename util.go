@@ -219,11 +219,11 @@ func performIncludes(old *Payload, fromfile string, block Directives) chan inclu
 	return c
 }
 
-// extract directives from a source code through regex. Key of the return map is directive name, value of it is bitmask names
-// one directive can have different bitmasks, so the value of the map is two-dimensional array
+// extract directives from a source code through regex. Key of the return map is directive name
+// value of it is its bitmasks in string
 func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, error) {
 	directiveMap := make(map[string][][]string, 0)
-	directiveArrayExtracter := regexp.MustCompile(extractNgxDirectiveArrayRegex)
+	directivesDefineBlockExtracter := regexp.MustCompile(extractNgxDirectiveArrayRegex)
 	singleDirectiveExtracter := regexp.MustCompile(extractNgxSingleDirectiveRegex)
 
 	err := filepath.WalkDir(rootPath, func(path string, d fs.DirEntry, err error) error {
@@ -243,19 +243,19 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 			strContent = strings.ReplaceAll(strContent, "\n", "")
 
 			// extract directives definition code blocks, each code block contains an array of directives definition
-			directiveArrays := directiveArrayExtracter.FindAllStringSubmatch(strContent, -1)
+			directiveBlocks := directivesDefineBlockExtracter.FindAllStringSubmatch(strContent, -1)
 			// iterate through every code block
-			for _, directiveArray := range directiveArrays {
-				// the name of the directives array in source code, it may be used as the context
-				directiveArrayName := directiveArray[1]
-				// extract directives and their attributes in the code block, the first dimension of directiveAttributesArray
-				// is index of directives, the second dimension is index of attributes
-				directiveAttributesArray := singleDirectiveExtracter.FindAllStringSubmatch(directiveArray[2], -1)
-				// iterate through every directive definition
-				for _, directiveAttributes := range directiveAttributesArray {
+			for _, directiveBlock := range directiveBlocks {
+				// the name of the directives block in source code, it may be used as the context
+				directiveBlockName := directiveBlock[1]
+				// extract directives and their attributes in the code block, the first dimension of attributesList
+				// is index of directive, the second dimension is index of attributes
+				attributesList := singleDirectiveExtracter.FindAllStringSubmatch(directiveBlock[2], -1)
+				// iterate through every directive
+				for _, attributes := range attributesList {
 					// extract attributes from the directive
-					directiveName := strings.TrimSpace(directiveAttributes[1])
-					diretiveBitmaskNames := strings.Split(directiveAttributes[2], "|")
+					directiveName := strings.TrimSpace(attributes[1])
+					diretiveBitmaskNames := strings.Split(attributes[2], "|")
 					haveContext := false
 
 					for idx, bitmaskName := range diretiveBitmaskNames {
@@ -269,7 +269,7 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 					// if the directive doesn't have context in source code, maybe we still have a human-defined context for it
 					// an example is directives in mgmt module, which was included in N+ R31
 					if !haveContext {
-						context, found := directiveBlock2Context[directiveArrayName]
+						context, found := directiveBlock2Context[directiveBlockName]
 						if found {
 							diretiveBitmaskNames = append(diretiveBitmaskNames, context)
 						}
