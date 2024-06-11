@@ -7,8 +7,6 @@
 
 package crossplane
 
-//go:generate go run ./scripts/generator.go 2 3
-
 import (
 	"fmt"
 	"io/fs"
@@ -243,6 +241,7 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 			strContent := string(byteContent)
 			strContent = strings.ReplaceAll(strContent, "\r\n", "")
 			strContent = strings.ReplaceAll(strContent, "\n", "")
+
 			// extract directives definition code blocks, each code block contains an array of directives definition
 			directiveArrays := directiveArrayExtracter.FindAllStringSubmatch(strContent, -1)
 			// iterate through every code block
@@ -267,6 +266,8 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 						}
 					}
 
+					// if the directive doesn't have context in source code, maybe we still have a human-defined context for it
+					// an example is directives in mgmt module, which was included in N+ R31
 					if !haveContext {
 						context, found := directiveBlock2Context[directiveArrayName]
 						if found {
@@ -348,35 +349,33 @@ func GenerateSupportFileFromCode(codePath string, moduleName string, outputFileP
 		return err
 	}
 
-	lineSeperator := GetLineSeperator()
 	// Annotations
-	file.WriteString("// This is generated code, don't modify it." + lineSeperator)
-	file.WriteString("// If you want to overwrite any directive's definition, please modify forced_directives_map.go" + lineSeperator)
-	file.WriteString("// All the definitions are generated from the source code you provided" + lineSeperator)
-	file.WriteString("// Each bit mask describes these behaviors:" + lineSeperator)
-	file.WriteString("//   - how many arguments the directive can take" + lineSeperator)
-	file.WriteString("//   - whether or not it is a block directive" + lineSeperator)
-	file.WriteString("//   - whether this is a flag (takes one argument that's either \"on\" or \"off\")" + lineSeperator)
-	file.WriteString("//   - which contexts it's allowed to be in" + lineSeperator)
+	lineSeperator := GetLineSeperator()
+	contents := make([]string, 0)
+	contents = append(contents, "// This is generated code, don't modify it.")
+	contents = append(contents, "// If you want to overwrite any directive's definition, please modify forced_directives_map.go")
+	contents = append(contents, "// All the definitions are generated from the source code you provided")
+	contents = append(contents, "// Each bit mask describes these behaviors:")
+	contents = append(contents, "//   - how many arguments the directive can take")
+	contents = append(contents, "//   - whether or not it is a block directive")
+	contents = append(contents, "//   - whether this is a flag (takes one argument that's either \"on\" or \"off\")")
+	contents = append(contents, "//   - which contexts it's allowed to be in")
+	contents = append(contents, "")
 
-	file.WriteString(lineSeperator)
+	// package definition
+	contents = append(contents, "package crossplane")
+	contents = append(contents, "")
 
-	_, err = file.WriteString("package crossplane" + lineSeperator)
-	if err != nil {
-		return err
-	}
+	contents = append(contents, "//nolint:gochecknoglobals")
 
-	file.WriteString(lineSeperator)
-	file.WriteString("//nolint:gochecknoglobals" + lineSeperator)
-
-	// make the first char in module name uppercaes, align with golang variable name conventions
+	// make the first char in module name as uppercase, align with golang variable name conventions
 	moduleNameRunes := []rune(moduleName)
 	if moduleNameRunes[0] >= 'a' && moduleNameRunes[0] <= 'z' {
 		moduleNameRunes[0] += 'A' - 'a'
 	}
 	moduleName = string(moduleNameRunes)
 	mapVariableName := fmt.Sprintf("module%sDirectives", moduleName)
-	file.WriteString(fmt.Sprintf("var %s = map[string][]uint{%s", mapVariableName, lineSeperator))
+	contents = append(contents, fmt.Sprintf("var %s = map[string][]uint{", mapVariableName))
 
 	// sort the directive names, just for easier search and stable output
 	directiveNames := make([]string, 0, len(directiveMap))
@@ -387,33 +386,48 @@ func GenerateSupportFileFromCode(codePath string, moduleName string, outputFileP
 
 	// generate directives map
 	for _, name := range directiveNames {
-		file.WriteString(fmt.Sprintf("\t\"%s\": {%s", name, lineSeperator))
+		contents = append(contents, fmt.Sprintf("\t\"%s\": {", name))
 		bitmaskNamesList := directiveMap[name]
+
 		for _, bitmaskNames := range bitmaskNamesList {
 			bitmaskNameNum := len(bitmaskNames)
-			file.WriteString("\t\t")
+			var builder strings.Builder
+			builder.WriteString("\t\t")
 			for idx, bitmaskName := range bitmaskNames {
 				if idx > 0 {
-					file.WriteString("| ")
+					builder.WriteString("| ")
 				}
-				file.WriteString(bitmaskName)
+				builder.WriteString(bitmaskName)
 				if idx < bitmaskNameNum-1 {
-					file.WriteString(" ")
+					builder.WriteString(" ")
 				} else {
-					file.WriteString("," + lineSeperator)
+					builder.WriteString(",")
 				}
 			}
+			contents = append(contents, builder.String())
 		}
-		file.WriteString("\t}," + lineSeperator)
+
+		contents = append(contents, "\t},")
 	}
-	file.WriteString("}" + lineSeperator)
+	contents = append(contents, "}")
 
 	// generate MatchFn
-	file.WriteString(lineSeperator)
-	file.WriteString(fmt.Sprintf("func Match%s(directive string) ([]uint, bool) {%s", moduleName, lineSeperator))
-	file.WriteString(fmt.Sprintf("\tmasks, matched := %s[directive]%s", mapVariableName, lineSeperator))
-	file.WriteString("\treturn masks, matched" + lineSeperator)
-	file.WriteString("}")
+	contents = append(contents, "")
+	contents = append(contents, fmt.Sprintf("func Match%s(directive string) ([]uint, bool) {", moduleName))
+	contents = append(contents, fmt.Sprintf("\tmasks, matched := %s[directive]", mapVariableName))
+	contents = append(contents, "\treturn masks, matched")
+	contents = append(contents, "}")
+
+	for _, str := range contents {
+		_, err := file.WriteString(str)
+		if err != nil {
+			return err
+		}
+		_, err = file.WriteString(lineSeperator)
+		if err != nil {
+			return err
+		}
+	}
 	file.Close()
 	return nil
 }
