@@ -7,9 +7,17 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	crossplane "github.com/nginxinc/nginx-go-crossplane"
+)
+
+const (
+	ossRepo         = "https://github.com/nginx/nginx.git"
+	ossVersionLimit = 6
+	tmpRootDir      = "./generator_tmp"
 )
 
 var module2git = map[string]string{
@@ -82,6 +90,87 @@ func testRun() {
 }
 
 func generateOSS() error {
+	ossTmpDir := path.Join(tmpRootDir, "OSS")
+	if directoryExists(ossTmpDir) {
+		err := os.RemoveAll(ossTmpDir)
+		if err != nil {
+			return &crossplane.BasicError{
+				Reason: fmt.Sprintf("Removing %s failed, please remove this directory mannually", ossTmpDir),
+			}
+		}
+	}
+	defer os.RemoveAll(tmpRootDir)
+
+	repo, err := git.PlainClone(ossTmpDir, false, &git.CloneOptions{
+		URL: ossRepo,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// Fetch all remote branches
+	// err = repo.Fetch(&git.FetchOptions{
+	// 	RemoteName: "origin",
+	// 	RefSpecs:   []config.RefSpec{"refs/heads/*:refs/remotes/origin/*"},
+	// })
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
+	}
+
+	worktree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	// List all references and filter branches
+	refs, err := repo.References()
+	if err != nil {
+		return err
+	}
+
+	// Iterate through all branches
+	allBranches := make([]string, 0)
+	err = refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
+			branchName := ref.Name().Short()
+			fmt.Printf("Checking branch: %s\n", branchName)
+			// get "master" and "default" out here
+			if strings.Contains(branchName, "-") {
+				allBranches = append(allBranches, branchName)
+			}
+			if branchName == "origin/branches/stable-1.8" {
+
+				worktree.Checkout(&git.CheckoutOptions{
+					Branch: ref.Name(),
+				})
+				return nil
+			}
+
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	sort.Slice(allBranches, func(i, j int) bool {
+		iVersionStr := strings.Split(allBranches[i], "-")[1]
+		jVersionStr := strings.Split(allBranches[j], "-")[1]
+
+		return iVersion > jVersion
+	})
+	// only supports several latest stable version
+	wantedBranches := make(map[string]interface{}, 0)
+	wantedBranches["master"] = nil
+	for idx, branch := range allBranches {
+		if idx >= ossVersionLimit-1 {
+			break
+		}
+		wantedBranches[branch] = nil
+		fmt.Println(branch)
+	}
+
 	return nil
 }
 
@@ -126,8 +215,7 @@ func generateModuleFromWeb(moduleName string) error {
 		}
 	}
 
-	tmpRootDir := "./generator_tmp"
-	moduleTmpDir := "./generator_tmp/" + moduleName
+	moduleTmpDir := path.Join(tmpRootDir, moduleName)
 	if directoryExists(moduleTmpDir) {
 		err := os.RemoveAll(moduleTmpDir)
 		if err != nil {
@@ -152,7 +240,7 @@ func generateModuleFromWeb(moduleName string) error {
 		return err
 	}
 
-	err = crossplane.GenerateSupportFileFromCode(moduleTmpDir, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), getModuleFileName(moduleName))
+	err = generateSupportFileFromCode(moduleTmpDir, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), getModuleFileName(moduleName))
 	if err != nil {
 		return err
 	}
@@ -169,6 +257,7 @@ func generateFromWeb(moduleName string) error {
 }
 
 func main() {
+	start_t := time.Now()
 	var (
 		function       = flag.String("func", "", "the function you need, should be code2map, code2json, generate, or json2map (required)")
 		sourceCodePath = flag.String("source_code", "", "the folder includes the source code your want to generate support from (required when func=code2map or code2json)")
@@ -212,12 +301,14 @@ func main() {
 			fmt.Println("Please provide the module name, -h or --help for help")
 			return
 		}
-		err := crossplane.GenerateSupportFileFromCode(*sourceCodePath, getModuleMapName(*moduleName), getModuleMatchFnName(*moduleName), path.Join(*outputFolder, getModuleFileName(*moduleName)))
+		err := generateSupportFileFromCode(*sourceCodePath, getModuleMapName(*moduleName), getModuleMatchFnName(*moduleName), path.Join(*outputFolder, getModuleFileName(*moduleName)))
 		if err != nil {
 			fmt.Println("Generate failed, error:")
 			fmt.Println(err.Error())
 		}
 	}
+
+	fmt.Println("use time:" + time.Since(start_t).String())
 	// fmt.Println(*moduleName)
 	// testRun()
 

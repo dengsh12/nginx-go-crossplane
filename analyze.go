@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+//go:generate echo "aaa"
+//go:generate go run ./scripts/generator.go --func=generate --module_name=lua
+//go:generate go run ./scripts/generator.go --func=generate --module_name=headersMore
+//go:generate go run ./scripts/generator.go --func=generate --module_name=njs
+//go:generate go run ./scripts/generator.go --func=generate --module_name=otel
+
 package crossplane
 
 import (

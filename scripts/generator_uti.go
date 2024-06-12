@@ -1,10 +1,4 @@
-package crossplane
-
-//go:generate echo "aaa"
-//go:generate go run ./scripts/generator_script.go --func=generate --module_name=lua
-//go:generate go run ./scripts/generator_script.go --func=generate --module_name=headersMore
-//go:generate go run ./scripts/generator_script.go --func=generate --module_name=njs
-//go:generate go run ./scripts/generator_script.go --func=generate --module_name=otel
+package main
 
 import (
 	"fmt"
@@ -15,6 +9,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
 const (
@@ -133,7 +129,7 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 	}
 
 	if len(directiveMap) == 0 {
-		return nil, &BasicError{
+		return nil, &crossplane.BasicError{
 			Reason: "can't find any directives in the directory and subdirectories, please check the path",
 		}
 	}
@@ -178,7 +174,7 @@ func GetLineSeperator() string {
 	return "\n"
 }
 
-func GenerateSupportFileFromCode(codePath string, mapVariableName string, mathFnName string, outputFilePath string) error {
+func generateSupportFileFromCode(codePath string, mapVariableName string, mathFnName string, outputFilePath string) error {
 	directiveMap, err := extractDirectiveMapFromFolder(codePath)
 	if err != nil {
 		return err
