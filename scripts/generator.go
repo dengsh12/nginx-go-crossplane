@@ -6,10 +6,12 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
@@ -110,10 +112,10 @@ func generateOSS() error {
 	}
 
 	// Fetch all remote branches
-	// err = repo.Fetch(&git.FetchOptions{
-	// 	RemoteName: "origin",
-	// 	RefSpecs:   []config.RefSpec{"refs/heads/*:refs/remotes/origin/*"},
-	// })
+	err = repo.Fetch(&git.FetchOptions{
+		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{"refs/heads/*:refs/remotes/origin/*"},
+	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
 	}
@@ -129,24 +131,15 @@ func generateOSS() error {
 		return err
 	}
 
-	// Iterate through all branches
+	// find all branches
 	allBranches := make([]string, 0)
 	err = refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
 			branchName := ref.Name().Short()
-			fmt.Printf("Checking branch: %s\n", branchName)
 			// get "master" and "default" out here
 			if strings.Contains(branchName, "-") {
 				allBranches = append(allBranches, branchName)
 			}
-			if branchName == "origin/branches/stable-1.8" {
-
-				worktree.Checkout(&git.CheckoutOptions{
-					Branch: ref.Name(),
-				})
-				return nil
-			}
-
 		}
 		return nil
 	})
@@ -154,21 +147,55 @@ func generateOSS() error {
 		return err
 	}
 
+	// only supports several latest stable version
 	sort.Slice(allBranches, func(i, j int) bool {
 		iVersionStr := strings.Split(allBranches[i], "-")[1]
 		jVersionStr := strings.Split(allBranches[j], "-")[1]
-
-		return iVersion > jVersion
+		iVerSplit := strings.Split(iVersionStr, ".")
+		jVerSplit := strings.Split(jVersionStr, ".")
+		iVerIntPart, _ := strconv.Atoi(iVerSplit[0])
+		jVerIntPart, _ := strconv.Atoi(jVerSplit[0])
+		iVerDecimalPart, _ := strconv.Atoi(iVerSplit[1])
+		jVerDecimalPart, _ := strconv.Atoi(jVerSplit[1])
+		if iVerIntPart == jVerIntPart {
+			return iVerDecimalPart > jVerDecimalPart
+		}
+		return iVerIntPart > jVerIntPart
 	})
-	// only supports several latest stable version
 	wantedBranches := make(map[string]interface{}, 0)
-	wantedBranches["master"] = nil
+	wantedBranches["origin/master"] = nil
 	for idx, branch := range allBranches {
-		if idx >= ossVersionLimit-1 {
+		if idx >= ossVersionLimit-2 {
 			break
 		}
 		wantedBranches[branch] = nil
-		fmt.Println(branch)
+	}
+
+	// generate support files
+	err = refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
+			branchName := ref.Name().Short()
+			if _, found := wantedBranches[branchName]; found {
+				err := worktree.Checkout(&git.CheckoutOptions{
+					Branch: ref.Name(),
+				})
+				if err != nil {
+					return err
+				}
+				ossVerStr := ""
+				if strings.Contains(branchName, "master") {
+					ossVerStr = "latest"
+				} else {
+					ossVerStr = strings.Split(branchName, "-")[1]
+					ossVerStr = strings.Join(strings.Split(ossVerStr, "."), "")
+				}
+				generateSupportFileFromCode(ossTmpDir, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), fmt.Sprintf("MatchOss%s", ossVerStr), fmt.Sprintf("./ngx_oss_%s_directives.go", ossVerStr))
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
