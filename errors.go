@@ -43,10 +43,10 @@ func (e *ParseError) Unwrap() error {
 }
 
 type BasicError struct {
-	reason string
+	Reason string
 }
 
 // Error implements error.
 func (e *BasicError) Error() string {
-	return e.reason
+	return e.Reason
 }
