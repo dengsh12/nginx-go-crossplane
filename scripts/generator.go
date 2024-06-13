@@ -1,3 +1,9 @@
+//go:generate go run generator.go generator_util.go --func=generate --module_name=lua
+//go:generate go run generator.go generator_util.go --func=generate --module_name=headersMore
+//go:generate go run generator.go generator_util.go  --func=generate --module_name=njs
+//go:generate go run generator.go generator_util.go  --func=generate --module_name=otel
+//go:generate go run generator.go generator_util.go  --func=generate --module_name=OSS
+
 package main
 
 import (
@@ -5,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,7 +20,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
-	crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
 const (
@@ -89,6 +95,12 @@ func testRun() {
 	for _, str := range os.Args {
 		fmt.Println(str)
 	}
+	_, filePath, _, ok := runtime.Caller(0)
+	if ok {
+		fmt.Println(filePath)
+		return
+	}
+	os.Exit(0)
 }
 
 func generateOSS() error {
@@ -96,9 +108,7 @@ func generateOSS() error {
 	if directoryExists(ossTmpDir) {
 		err := os.RemoveAll(ossTmpDir)
 		if err != nil {
-			return &crossplane.BasicError{
-				Reason: fmt.Sprintf("Removing %s failed, please remove this directory mannually", ossTmpDir),
-			}
+			return fmt.Errorf("Removing %s failed, please remove this directory mannually", ossTmpDir)
 		}
 	}
 	os.MkdirAll(ossTmpDir, 0777)
@@ -177,6 +187,12 @@ func generateOSS() error {
 	if err != nil {
 		return err
 	}
+	matchFnList := make([]string, 0)
+	projectRoot, err := getProjectRootAbsPath()
+	if err != nil {
+		return err
+	}
+
 	err = refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
 			branchName := ref.Name().Short()
@@ -194,11 +210,19 @@ func generateOSS() error {
 					ossVerStr = strings.Split(branchName, "-")[1]
 					ossVerStr = strings.Join(strings.Split(ossVerStr, "."), "")
 				}
-				generateSupportFileFromCode(ossTmpDir, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), fmt.Sprintf("MatchOss%s", ossVerStr), fmt.Sprintf("./ngx_oss_%s_directives.go", ossVerStr))
+				matchFnName := fmt.Sprintf("MatchOss%s", ossVerStr)
+				fileName := fmt.Sprintf("./ngx_oss_%s_directives.go", ossVerStr)
+				generateSupportFileFromCode(ossTmpDir, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName))
+				matchFnList = append(matchFnList, matchFnName)
 			}
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	err = generateOssMatchFnList(matchFnList)
 	if err != nil {
 		return err
 	}
@@ -215,45 +239,17 @@ func normalizeModuleName(moduleName string) string {
 	return string(moduleNameRunes)
 }
 
-func getModuleMapName(moduleName string) string {
-	normalizedName := normalizeModuleName(moduleName)
-	return fmt.Sprintf("module%sDirectives", normalizedName)
-
-}
-
-func getModuleMatchFnName(moduleName string) string {
-	normalizedName := normalizeModuleName(moduleName)
-	return fmt.Sprintf("Match%s", normalizedName)
-}
-
-func getModuleFileName(moduleName string) string {
-	// normalizedName := normalizeModuleName(moduleName)
-	return fmt.Sprintf("module_%s_directives.go", moduleName)
-}
-
-func directoryExists(path string) bool {
-	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return info.IsDir()
-}
-
 func generateModuleFromWeb(moduleName string) error {
 	repoURL, found := module2git[moduleName]
 	if !found {
-		return &crossplane.BasicError{
-			Reason: fmt.Sprintf("can't find git repo for module {%s}, make sure it is in the module2git map (in ./scripts/generator_script.go)", moduleName),
-		}
+		return fmt.Errorf("can't find git repo for module {%s}, make sure it is in the module2git map (in ./scripts/generator_script.go)", moduleName)
 	}
 
 	moduleTmpDir := path.Join(tmpRootDir, moduleName)
 	if directoryExists(moduleTmpDir) {
 		err := os.RemoveAll(moduleTmpDir)
 		if err != nil {
-			return &crossplane.BasicError{
-				Reason: fmt.Sprintf("Removing %s failed, please remove this directory mannually", moduleTmpDir),
-			}
+			return fmt.Errorf("Removing %s failed, please remove this directory mannually", moduleTmpDir)
 		}
 	}
 	defer os.RemoveAll(tmpRootDir)
@@ -272,7 +268,12 @@ func generateModuleFromWeb(moduleName string) error {
 		return err
 	}
 
-	err = generateSupportFileFromCode(moduleTmpDir, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), getModuleFileName(moduleName))
+	projectRoot, err := getProjectRootAbsPath()
+	if err != nil {
+		return err
+	}
+
+	err = generateSupportFileFromCode(moduleTmpDir, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)))
 	if err != nil {
 		return err
 	}
@@ -289,6 +290,8 @@ func generateFromWeb(moduleName string) error {
 }
 
 func main() {
+	// testRun()
+	// return
 	start_t := time.Now()
 	var (
 		function       = flag.String("func", "", "the function you need, should be code2map, code2json, generate, or json2map (required)")
@@ -342,7 +345,6 @@ func main() {
 
 	fmt.Println("use time:" + time.Since(start_t).String())
 	// fmt.Println(*moduleName)
-	// testRun()
 
 	// directiveMap, _ := crossplane.ExtractDirectiveMapFromFolder(path)
 

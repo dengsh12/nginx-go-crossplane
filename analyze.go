@@ -5,11 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//go:generate go run ./scripts/generator.go ./scripts/generator_util.go --func=generate --module_name=lua
-//go:generate go run ./scripts/generator.go ./scripts/generator_util.go  --func=generate --module_name=headersMore
-//go:generate go run ./scripts/generator.go ./scripts/generator_util.go  --func=generate --module_name=njs
-//go:generate go run ./scripts/generator.go ./scripts/generator_util.go  --func=generate --module_name=otel
-//go:generate go run ./scripts/generator.go ./scripts/generator_util.go  --func=generate --module_name=OSS
 package crossplane
 
 import (
@@ -17,9 +12,6 @@ import (
 	"reflect"
 )
 
-var ngxOssMatchFuns = map[uintptr]interface{}{
-	reflect.ValueOf(MatchNgxOss1270).Pointer(): nil,
-}
 var ngxPlusMatchFuns = map[uintptr]interface{}{
 	reflect.ValueOf(MatchNgxPlusR31).Pointer(): nil,
 }
