@@ -18,7 +18,7 @@ import (
 
 const (
 	ossRepo         = "https://github.com/nginx/nginx.git"
-	ossVersionLimit = 6
+	ossVersionLimit = 3
 	tmpRootDir      = "./generator_tmp"
 )
 
@@ -101,6 +101,7 @@ func generateOSS() error {
 			}
 		}
 	}
+	os.MkdirAll(ossTmpDir, 0777)
 	defer os.RemoveAll(tmpRootDir)
 
 	repo, err := git.PlainClone(ossTmpDir, false, &git.CloneOptions{
@@ -165,13 +166,17 @@ func generateOSS() error {
 	wantedBranches := make(map[string]interface{}, 0)
 	wantedBranches["origin/master"] = nil
 	for idx, branch := range allBranches {
-		if idx >= ossVersionLimit-2 {
+		if idx >= ossVersionLimit-1 {
 			break
 		}
 		wantedBranches[branch] = nil
 	}
 
 	// generate support files
+	refs, err = repo.References()
+	if err != nil {
+		return err
+	}
 	err = refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
 			branchName := ref.Name().Short()
