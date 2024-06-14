@@ -2431,9 +2431,16 @@ func TestAnalyze_headers_more(t *testing.T) {
 //nolint:funlen
 func TestAnalyze_match_function(t *testing.T) {
 	t.Parallel()
-	testDirectiveInMatchFnAndOSS := "in_matchFn_Oss"
-	headersMoreDirectives[testDirectiveInMatchFnAndOSS] = []uint{ngxAnyConf | ngxConfTake2}
-	directives[testDirectiveInMatchFnAndOSS] = []uint{ngxAnyConf | ngxConfTake1}
+	// define a test matchFn so that "state" directive has different definition in OSS and matchFn
+	testDirectiveMap := map[string][]uint{
+		"state":    {ngxAnyConf | ngxConfTake2},
+		"test_dir": {ngxAnyConf | ngxConfTake1},
+	}
+	testMatchFn := func(directive string) ([]uint, bool) {
+		masks, matched := testDirectiveMap[directive]
+		return masks, matched
+	}
+
 	testcases := map[string]struct {
 		stmt    *Directive
 		ctx     blockCtx
@@ -2441,43 +2448,43 @@ func TestAnalyze_match_function(t *testing.T) {
 	}{
 		"only in matchFn ok": {
 			&Directive{
-				Directive: "more_set_headers",
-				Args:      []string{"Server: my_server"},
+				Directive: "test_dir",
+				Args:      []string{"args1"},
 				Line:      5,
 			},
-			blockCtx{"http", "location"},
+			blockCtx{"http", "upstream"},
 			false,
 		},
 		"in matchFn and OSS but only satisfy matchFn ok": {
 			&Directive{
-				Directive: testDirectiveInMatchFnAndOSS,
+				Directive: "state",
 				Args:      []string{"args1", "args2"},
 				Line:      5,
 			},
-			blockCtx{"http", "location"},
+			blockCtx{"http", "upstream"},
 			false,
 		},
 		"in matchFn and OSS but only satisfy OSS ok": {
 			&Directive{
-				Directive: testDirectiveInMatchFnAndOSS,
+				Directive: "state",
 				Args:      []string{"args1"},
 				Line:      5,
 			},
-			blockCtx{"http", "location"},
+			blockCtx{"http", "upstream"},
 			false,
 		},
 		"in matchFn and OSS but not satisfy any not ok": {
 			&Directive{
-				Directive: testDirectiveInMatchFnAndOSS,
+				Directive: "state",
 				Args:      []string{},
 				Line:      5,
 			},
-			blockCtx{"http", "location"},
+			blockCtx{"http", "upstream"},
 			true,
 		},
 		"not in matchFn and OSS not ok": {
 			&Directive{
-				Directive: testDirectiveInMatchFnAndOSS,
+				Directive: "no_exist",
 				Args:      []string{},
 				Line:      5,
 			},
@@ -2491,7 +2498,7 @@ func TestAnalyze_match_function(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			err := analyze("nginx.conf", tc.stmt, ";", tc.ctx, &ParseOptions{
-				MatchFuncs:               []MatchFunc{MatchHeadersMore},
+				MatchFuncs:               []MatchFunc{testMatchFn},
 				ErrorOnUnknownDirectives: true,
 			})
 
