@@ -2447,7 +2447,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 		wantErr bool
 	}{
 		// the directive only found in matchFn and satisfies the bitmask in it
-		"matched only by matchFn": {
+		"FoundOnlyInMatchFn": {
 			&Directive{
 				Directive: "test_dir",
 				Args:      []string{"args1"},
@@ -2458,7 +2458,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 		},
 		// the directive found in both default map and matchFn,
 		// but only satisfies bitmasks in matchFn it should still pass validation
-		"matched by matchFn and default map case1": {
+		"FoundInMatchFnAndDefaultMap_case1": {
 			&Directive{
 				Directive: "state",
 				Args:      []string{"args1", "args2"},
@@ -2469,7 +2469,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 		},
 		// the directive found in both default map and matchFn,
 		// but only satisfies bitmasks in default map it should still pass validation
-		"matched by matchFn and default map case2": {
+		"FoundInMatchFnAndDefaultMap_case2": {
 			&Directive{
 				Directive: "state",
 				Args:      []string{"args1"},
@@ -2480,7 +2480,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 		},
 		// the directive found in both default map and matchFn,
 		// but doesn't satisfies bitmasks in them, it should not pass validation
-		"not matched by matchFn or default map case1": {
+		"FoundInMatchFnAndDefaultMap_case3": {
 			&Directive{
 				Directive: "state",
 				Args:      []string{},
@@ -2490,7 +2490,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 			true,
 		},
 		// the directive not found in default map or matchFn
-		"not matched by matchFn or default map case2": {
+		"NotFoundInMatchFnOrDefaultMap": {
 			&Directive{
 				Directive: "no_exist",
 				Args:      []string{},
