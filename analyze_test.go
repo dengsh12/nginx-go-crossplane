@@ -2446,7 +2446,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 		ctx     blockCtx
 		wantErr bool
 	}{
-		"only in matchFn ok": {
+		"matched only by matchFn": {
 			&Directive{
 				Directive: "test_dir",
 				Args:      []string{"args1"},
@@ -2455,7 +2455,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			false,
 		},
-		"in matchFn and OSS but only satisfy matchFn ok": {
+		"matched by matchFn and default map case1": {
 			&Directive{
 				Directive: "state",
 				Args:      []string{"args1", "args2"},
@@ -2464,7 +2464,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			false,
 		},
-		"in matchFn and OSS but only satisfy OSS ok": {
+		"matched by matchFn and default map case2": {
 			&Directive{
 				Directive: "state",
 				Args:      []string{"args1"},
@@ -2473,7 +2473,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			false,
 		},
-		"in matchFn and OSS but not satisfy any not ok": {
+		"not matched by matchFn or default map case1": {
 			&Directive{
 				Directive: "state",
 				Args:      []string{},
@@ -2482,7 +2482,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			true,
 		},
-		"not in matchFn and OSS not ok": {
+		"not matched by matchFn or default map case2": {
 			&Directive{
 				Directive: "no_exist",
 				Args:      []string{},
