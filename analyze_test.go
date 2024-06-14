@@ -2427,3 +2427,81 @@ func TestAnalyze_headers_more(t *testing.T) {
 		})
 	}
 }
+
+//nolint:funlen
+func TestAnalyze_match_function(t *testing.T) {
+	t.Parallel()
+	testDirectiveInMatchFnAndOSS := "in_matchFn_Oss"
+	headersMoreDirectives[testDirectiveInMatchFnAndOSS] = []uint{ngxAnyConf | ngxConfTake2}
+	directives[testDirectiveInMatchFnAndOSS] = []uint{ngxAnyConf | ngxConfTake1}
+	testcases := map[string]struct {
+		stmt    *Directive
+		ctx     blockCtx
+		wantErr bool
+	}{
+		"only in matchFn ok": {
+			&Directive{
+				Directive: "more_set_headers",
+				Args:      []string{"Server: my_server"},
+				Line:      5,
+			},
+			blockCtx{"http", "location"},
+			false,
+		},
+		"in matchFn and OSS but only satisfy matchFn ok": {
+			&Directive{
+				Directive: testDirectiveInMatchFnAndOSS,
+				Args:      []string{"args1", "args2"},
+				Line:      5,
+			},
+			blockCtx{"http", "location"},
+			false,
+		},
+		"in matchFn and OSS but only satisfy OSS ok": {
+			&Directive{
+				Directive: testDirectiveInMatchFnAndOSS,
+				Args:      []string{"args1"},
+				Line:      5,
+			},
+			blockCtx{"http", "location"},
+			false,
+		},
+		"in matchFn and OSS but not satisfy any not ok": {
+			&Directive{
+				Directive: testDirectiveInMatchFnAndOSS,
+				Args:      []string{},
+				Line:      5,
+			},
+			blockCtx{"http", "location"},
+			true,
+		},
+		"not in matchFn and OSS not ok": {
+			&Directive{
+				Directive: testDirectiveInMatchFnAndOSS,
+				Args:      []string{},
+				Line:      5,
+			},
+			blockCtx{"http", "location"},
+			true,
+		},
+	}
+
+	for name, tc := range testcases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			err := analyze("nginx.conf", tc.stmt, ";", tc.ctx, &ParseOptions{
+				MatchFuncs:               []MatchFunc{MatchHeadersMore},
+				ErrorOnUnknownDirectives: true,
+			})
+
+			if !tc.wantErr && err != nil {
+				t.Fatal(err)
+			}
+
+			if tc.wantErr && err == nil {
+				t.Fatal("expected error, got nil")
+			}
+		})
+	}
+}

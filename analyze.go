@@ -95,13 +95,13 @@ func enterBlockCtx(stmt *Directive, ctx blockCtx) blockCtx {
 //nolint:gocyclo,funlen,gocognit
 func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *ParseOptions) error {
 	masks, knownDirective := directives[stmt.Directive]
+	directiveName := stmt.Directive
 	currCtx, knownContext := contexts[ctx.key()]
 
-	if !knownDirective {
-		for _, matchFn := range options.MatchFuncs {
-			if masks, knownDirective = matchFn(stmt.Directive); knownDirective {
-				break
-			}
+	for _, matchFn := range options.MatchFuncs {
+		if masksInFn, found := matchFn(directiveName); found {
+			masks = append(masks, masksInFn...)
+			knownDirective = true
 		}
 	}
 
