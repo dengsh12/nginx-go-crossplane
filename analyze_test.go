@@ -2446,6 +2446,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 		ctx     blockCtx
 		wantErr bool
 	}{
+		// the directive only found in matchFn and satisfies the bitmask in it
 		"matched only by matchFn": {
 			&Directive{
 				Directive: "test_dir",
@@ -2455,6 +2456,8 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			false,
 		},
+		// the directive found in both default map and matchFn,
+		// but only satisfies bitmasks in matchFn it should still pass validation
 		"matched by matchFn and default map case1": {
 			&Directive{
 				Directive: "state",
@@ -2464,6 +2467,8 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			false,
 		},
+		// the directive found in both default map and matchFn,
+		// but only satisfies bitmasks in default map it should still pass validation
 		"matched by matchFn and default map case2": {
 			&Directive{
 				Directive: "state",
@@ -2473,6 +2478,8 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			false,
 		},
+		// the directive found in both default map and matchFn,
+		// but doesn't satisfies bitmasks in them, it should not pass validation
 		"not matched by matchFn or default map case1": {
 			&Directive{
 				Directive: "state",
@@ -2482,6 +2489,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			true,
 		},
+		// the directive not found in default map or matchFn
 		"not matched by matchFn or default map case2": {
 			&Directive{
 				Directive: "no_exist",
