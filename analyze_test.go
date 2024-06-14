@@ -2429,7 +2429,7 @@ func TestAnalyze_headers_more(t *testing.T) {
 }
 
 //nolint:funlen
-func TestAnalyze_match_function(t *testing.T) {
+func TestAnalyze_matchFn(t *testing.T) {
 	t.Parallel()
 	// define a test matchFn so that "state" directive has different definition in OSS and matchFn
 	testDirectiveMap := map[string][]uint{
