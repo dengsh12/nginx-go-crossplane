@@ -94,7 +94,7 @@ func enterBlockCtx(stmt *Directive, ctx blockCtx) blockCtx {
 
 //nolint:gocyclo,funlen,gocognit
 func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *ParseOptions) error {
-	masks := []uint{}
+	var masks []uint
 	knownDirective := false
 
 	currCtx, knownContext := contexts[ctx.key()]
