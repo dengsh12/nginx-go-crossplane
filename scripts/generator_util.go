@@ -299,7 +299,7 @@ func directoryExists(path string) bool {
 func getProjectRootAbsPath() (string, error) {
 	_, filePath, _, ok := runtime.Caller(0)
 	if !ok {
-		return "", fmt.Errorf("Can't get path of generator_util.go through runtime")
+		return "", fmt.Errorf("can't get path of generator_util.go through runtime")
 	}
 	absPath, err := filepath.Abs(filePath)
 	if err != nil {

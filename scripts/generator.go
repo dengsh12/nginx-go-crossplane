@@ -102,7 +102,7 @@ func generateOSS() error {
 	if directoryExists(ossTmpDir) {
 		err := os.RemoveAll(ossTmpDir)
 		if err != nil {
-			return fmt.Errorf("Removing %s failed, please remove this directory mannually", ossTmpDir)
+			return fmt.Errorf("removing %s failed, please remove this directory mannually", ossTmpDir)
 		}
 	}
 	os.MkdirAll(ossTmpDir, 0777)
@@ -243,7 +243,7 @@ func generateModuleFromWeb(moduleName string) error {
 	if directoryExists(moduleTmpDir) {
 		err := os.RemoveAll(moduleTmpDir)
 		if err != nil {
-			return fmt.Errorf("Removing %s failed, please remove this directory mannually", moduleTmpDir)
+			return fmt.Errorf("removing %s failed, please remove this directory mannually", moduleTmpDir)
 		}
 	}
 	defer os.RemoveAll(tmpRootDir)
