@@ -113,7 +113,7 @@ type ParseOptions struct {
 
 	// An array of MatchFunc, which is used to indicate the OSS/N+ version, and
 	// dynamic modules you want to include for validation. If a directive matches
-	// any of them, it should pass the validation
+	// any of them, and satisfies the corresponding bitmask, it should pass the validation
 	DirectiveSources []MatchFunc
 
 	LexOptions LexOptions
