@@ -108,7 +108,8 @@ type ParseOptions struct {
 	// encountered by the parser to determine the valid contexts and argument count of the
 	// directive. Set this option to enable parsing of directives belonging to non-core or
 	// dynamic NGINX modules that follow the usual grammar rules of an NGINX configuration.
-	// Deprecated: use MatchAny instead
+	// If DirectiveSources was provided, this will be ignored.
+	// Deprecated: use DirectiveSources instead
 	MatchFuncs []MatchFunc
 
 	// An array of MatchFunc, which is used to indicate the OSS/N+ version, and
