@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	// extract single directive definition block
+	// Extract single directive definition block
 	// static ngx_command_t  {name}[] = {definition}
 	// this regex extracts {name} and {definition}
 	extractNgxDirectiveArrayRegex = "ngx_command_t\\s+(\\w+)\\[\\]\\s*=\\s*{(.*?)};"
-	// extract one directive definition and attributes from extracted block
+	// Extract one directive definition and attributes from extracted block
 	// { ngx_string({directive_name}),
 	//   {bitmask1|bitmask2|...},
 	//   ... },
@@ -55,7 +55,7 @@ var directiveBlock2Context = map[string]string{
 	"ngx_mgmt_block_commands": "ngxMgmtMainConf",
 }
 
-// extract directives from a source code through regex. Key of the return map is directive name
+// Extract directives from a source code through regex. Key of the return map is directive name
 // value of it is its bitmasks in string
 func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, error) {
 	directiveMap := make(map[string][][]string, 0)
@@ -78,18 +78,18 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 			strContent = strings.ReplaceAll(strContent, "\r\n", "")
 			strContent = strings.ReplaceAll(strContent, "\n", "")
 
-			// extract directives definition code blocks, each code block contains an array of directives definition
+			// Extract directives definition code blocks, each code block contains an array of directives definition
 			directiveBlocks := directivesDefineBlockExtracter.FindAllStringSubmatch(strContent, -1)
-			// iterate through every code block
+			// Iterate through every code block
 			for _, directiveBlock := range directiveBlocks {
-				// the name of the directives block in source code, it may be used as the context
+				// The name of the directives block in source code, it may be used as the context
 				directiveBlockName := directiveBlock[1]
-				// extract directives and their attributes in the code block, the first dimension of attributesList
+				// Extract directives and their attributes in the code block, the first dimension of attributesList
 				// is index of directive, the second dimension is index of attributes
 				attributesList := singleDirectiveExtracter.FindAllStringSubmatch(directiveBlock[2], -1)
-				// iterate through every directive
+				// Iterate through every directive
 				for _, attributes := range attributesList {
-					// extract attributes from the directive
+					// Extract attributes from the directive
 					directiveName := strings.TrimSpace(attributes[1])
 					diretiveBitmaskNames := strings.Split(attributes[2], "|")
 					haveContext := false
@@ -102,7 +102,7 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 						}
 					}
 
-					// if the directive doesn't have context in source code, maybe we still have a human-defined context for it
+					// If the directive doesn't have context in source code, maybe we still have a human-defined context for it
 					// an example is directives in mgmt module, which was included in N+ R31
 					if !haveContext {
 						context, found := directiveBlock2Context[directiveBlockName]
@@ -135,7 +135,7 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 	return directiveMap, nil
 }
 
-// change the C style const name to Go style. An example is
+// Change the C style const name to Go style. An example is
 // NGX_CONF_TAKE1 to ngxConfTake1
 func ngxBitmaskName2Go(ngxVarName string) string {
 	bitmasksNames := strings.Split(ngxVarName, "_")
@@ -148,12 +148,12 @@ func ngxBitmaskName2Go(ngxVarName string) string {
 			bitMaskNameRun := []rune(bitMaskName)
 
 			for charIdx, char := range bitMaskNameRun {
-				// the first charachter should be lowercase(private)
+				// The first charachter should be lowercase(private)
 				if idx == 0 && charIdx == 0 && char >= 'A' && char <= 'Z' {
 					bitMaskNameRun[charIdx] += 'a' - 'A'
 				}
 
-				// change remain part from uppercase to lowercase
+				// Change remain part from uppercase to lowercase
 				if charIdx >= 1 && char >= 'A' && char <= 'Z' {
 					bitMaskNameRun[charIdx] += 'a' - 'A'
 				}
@@ -210,21 +210,21 @@ func generateSupportFileFromCode(codePath string, moduleName string, mapVariable
 	contents = append(contents, "//   - which contexts it's allowed to be in")
 	contents = append(contents, "")
 
-	// package definition
+	// Package definition
 	contents = append(contents, "package crossplane")
 	contents = append(contents, "")
 
 	contents = append(contents, "//nolint:gochecknoglobals")
 	contents = append(contents, fmt.Sprintf("var %s = map[string][]uint{", mapVariableName))
 
-	// sort the directive names, just for easier search and stable output
+	// Sort the directive names, just for easier search and stable output
 	directiveNames := make([]string, 0, len(directiveMap))
 	for name := range directiveMap {
 		directiveNames = append(directiveNames, name)
 	}
 	sort.Strings(directiveNames)
 
-	// generate directives map
+	// Generate directives map
 	for _, name := range directiveNames {
 		contents = append(contents, fmt.Sprintf("\t\"%s\": {", name))
 		bitmaskNamesList := directiveMap[name]
@@ -251,7 +251,7 @@ func generateSupportFileFromCode(codePath string, moduleName string, mapVariable
 	}
 	contents = append(contents, "}")
 
-	// generate MatchFn
+	// Generate MatchFn
 	contents = append(contents, "")
 	contents = append(contents, fmt.Sprintf("func %s(directive string) ([]uint, bool) {", mathFnName))
 	contents = append(contents, fmt.Sprintf("\tmasks, matched := %s[directive]", mapVariableName))
@@ -284,7 +284,6 @@ func getModuleMatchFnName(moduleName string) string {
 }
 
 func getModuleFileName(moduleName string) string {
-	// normalizedName := normalizeModuleName(moduleName)
 	return fmt.Sprintf("module_%s_directives.go", moduleName)
 }
 

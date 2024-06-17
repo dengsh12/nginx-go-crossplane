@@ -136,12 +136,12 @@ func generateOSS() error {
 		return err
 	}
 
-	// find all branches
+	// Find all branches
 	allBranches := make([]string, 0)
 	err = refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
 			branchName := ref.Name().Short()
-			// get "master" and "default" out here
+			// Kick "master" and "default" out
 			if strings.Contains(branchName, "-") {
 				allBranches = append(allBranches, branchName)
 			}
@@ -152,7 +152,7 @@ func generateOSS() error {
 		return err
 	}
 
-	// only supports several latest stable version
+	// Only supports several latest stable version
 	sort.Slice(allBranches, func(i, j int) bool {
 		iVersionStr := strings.Split(allBranches[i], "-")[1]
 		jVersionStr := strings.Split(allBranches[j], "-")[1]
@@ -176,7 +176,7 @@ func generateOSS() error {
 		wantedBranches[branch] = nil
 	}
 
-	// generate support files
+	// Generate support files
 	refs, err = repo.References()
 	if err != nil {
 		return err
@@ -216,16 +216,11 @@ func generateOSS() error {
 		return err
 	}
 
-	err = generateOssMatchFnList(matchFnList)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 func normalizeModuleName(moduleName string) string {
-	// make the first char in module name as uppercase, align with golang variable name conventions
+	// Make the first char in module name as uppercase, align with golang variable name conventions
 	moduleNameRunes := []rune(moduleName)
 	if moduleNameRunes[0] >= 'a' && moduleNameRunes[0] <= 'z' {
 		moduleNameRunes[0] += 'A' - 'a'
