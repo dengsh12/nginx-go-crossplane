@@ -2429,15 +2429,24 @@ func TestAnalyze_headers_more(t *testing.T) {
 }
 
 //nolint:funlen
-func TestAnalyze_matchFn(t *testing.T) {
+func TestAnalyze_directiveSources(t *testing.T) {
 	t.Parallel()
-	// define a test matchFn so that "state" directive has different definition in OSS and matchFn
-	testDirectiveMap := map[string][]uint{
-		"state":    {ngxAnyConf | ngxConfTake2},
-		"test_dir": {ngxAnyConf | ngxConfTake1},
+	// two self defined maps and matchFn to ensure it is a seperate test
+	testDirectiveMap1 := map[string][]uint{
+		"common_dir": {ngxAnyConf | ngxConfTake1},
+		"test_dir1":  {ngxAnyConf | ngxConfTake1},
 	}
-	testMatchFn := func(directive string) ([]uint, bool) {
-		masks, matched := testDirectiveMap[directive]
+	testSource1 := func(directive string) ([]uint, bool) {
+		masks, matched := testDirectiveMap1[directive]
+		return masks, matched
+	}
+
+	testDirectiveMap2 := map[string][]uint{
+		"common_dir": {ngxAnyConf | ngxConfTake2},
+		"test_dir2":  {ngxAnyConf | ngxConfTake2},
+	}
+	testSource2 := func(directive string) ([]uint, bool) {
+		masks, matched := testDirectiveMap2[directive]
 		return masks, matched
 	}
 
@@ -2446,51 +2455,71 @@ func TestAnalyze_matchFn(t *testing.T) {
 		ctx     blockCtx
 		wantErr bool
 	}{
-		// the directive only found in matchFn and satisfies the bitmask in it
-		"DirectiveFoundOnlyInMatchFn_pass": {
+		// The directive only found in source1 and satisfies the bitmask in it
+		"DirectiveFoundOnlyInSource1_pass": {
 			&Directive{
-				Directive: "test_dir",
-				Args:      []string{"args1"},
+				Directive: "test_dir1",
+				Args:      []string{"arg1"},
 				Line:      5,
 			},
 			blockCtx{"http", "upstream"},
 			false,
 		},
-		// the directive found in both default map and matchFn,
-		// but only satisfies bitmasks in matchFn it should still pass validation
-		"DirectiveFoundInMatchFnAndDefaultMap_pass_case1": {
+		// The directive only found in source2 and satisfies the bitmask in it
+		"DirectiveFoundOnlyInSource2_pass": {
 			&Directive{
-				Directive: "state",
-				Args:      []string{"args1", "args2"},
+				Directive: "test_dir2",
+				Args:      []string{"arg1", "arg2"},
 				Line:      5,
 			},
 			blockCtx{"http", "upstream"},
 			false,
 		},
-		// the directive found in both default map and matchFn,
-		// but only satisfies bitmasks in default map it should still pass validation
-		"DirectiveFoundInMatchFnAndDefaultMap_pass_case2": {
+		// The directive only found in source2 but not satisfies the bitmask in it
+		"DirectiveFoundOnlyInsource2_fail": {
 			&Directive{
-				Directive: "state",
-				Args:      []string{"args1"},
-				Line:      5,
-			},
-			blockCtx{"http", "upstream"},
-			false,
-		},
-		// the directive found in both default map and matchFn,
-		// but doesn't satisfies bitmasks in them, it should not pass validation
-		"DirectiveFoundInMatchFnAndDefaultMap_fail": {
-			&Directive{
-				Directive: "state",
-				Args:      []string{},
+				Directive: "test_dir2",
+				Args:      []string{"arg1"},
 				Line:      5,
 			},
 			blockCtx{"http", "upstream"},
 			true,
 		},
-		// the directive not found in default map or matchFn
-		"DirectiveNotFoundInMatchFnOrDefaultMap_fail": {
+		// The directive found in both sources,
+		// but only satisfies bitmasks in source1 it should still pass validation
+		"DirectiveFoundInBothSources_pass_case1": {
+			&Directive{
+				Directive: "common_dir",
+				Args:      []string{"arg1"},
+				Line:      5,
+			},
+			blockCtx{"http", "upstream"},
+			false,
+		},
+		// The directive found in both Sources,
+		// but only satisfies bitmasks in source2 it should still pass validation
+		"DirectiveFoundInBothSources_pass_case2": {
+			&Directive{
+				Directive: "common_dir",
+				Args:      []string{"arg1", "arg2"},
+				Line:      5,
+			},
+			blockCtx{"http", "upstream"},
+			false,
+		},
+		// The directive found in both sources,
+		// but doesn't satisfy bitmask in any of them
+		"DirectiveFoundInBothSources_fail": {
+			&Directive{
+				Directive: "common_dir",
+				Args:      []string{"arg1", "arg2", "arg3"},
+				Line:      5,
+			},
+			blockCtx{"http", "upstream"},
+			true,
+		},
+		// The directive not found in any soruce
+		"DirectiveNotFoundInAnySource_fail": {
 			&Directive{
 				Directive: "no_exist",
 				Args:      []string{},
@@ -2506,7 +2535,7 @@ func TestAnalyze_matchFn(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			err := analyze("nginx.conf", tc.stmt, ";", tc.ctx, &ParseOptions{
-				MatchFuncs:               []MatchFunc{testMatchFn},
+				DirectiveSources:         []MatchFunc{testSource1, testSource2},
 				ErrorOnUnknownDirectives: true,
 			})
 
