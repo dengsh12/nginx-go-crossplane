@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -63,9 +62,6 @@ var module2git = map[string]string{
 
 func compare2directiveMap(correct map[string][]uint, generated map[string][]uint) {
 	for directiveName, bitmask := range correct {
-		if !strings.HasPrefix(directiveName, "js") {
-			continue
-		}
 		mBitMask, find := generated[directiveName]
 		if !find {
 			fmt.Println(directiveName + " no found")
@@ -98,16 +94,7 @@ func compare2directiveMap(correct map[string][]uint, generated map[string][]uint
 }
 
 func testRun() {
-	// n := len(os.Args)
-	for _, str := range os.Args {
-		fmt.Println(str)
-	}
-	_, filePath, _, ok := runtime.Caller(0)
-	if ok {
-		fmt.Println(filePath)
-		return
-	}
-	os.Exit(0)
+	// compare2directiveMap(crossplane.LuaDirectives, crossplane.ModuleLuaDirectives)
 }
 
 func generateOSS() error {
