@@ -2431,7 +2431,7 @@ func TestAnalyze_headers_more(t *testing.T) {
 //nolint:funlen
 func TestAnalyze_directiveSources(t *testing.T) {
 	t.Parallel()
-	// two self defined maps and matchFn to ensure it is a seperate test
+	// two self defined maps and matchFn to ensure it is a separate test
 	testDirectiveMap1 := map[string][]uint{
 		"common_dir": {ngxAnyConf | ngxConfTake1},
 		"test_dir1":  {ngxAnyConf | ngxConfTake1},
@@ -2518,7 +2518,7 @@ func TestAnalyze_directiveSources(t *testing.T) {
 			blockCtx{"http", "upstream"},
 			true,
 		},
-		// The directive not found in any soruce
+		// The directive not found in any source
 		"DirectiveNotFoundInAnySource_fail": {
 			&Directive{
 				Directive: "no_exist",
