@@ -172,10 +172,18 @@ func getLineSeperator() string {
 	return "\n"
 }
 
-func generateSupportFileFromCode(codePath string, mapVariableName string, mathFnName string, outputFilePath string) error {
+func generateSupportFileFromCode(codePath string, moduleName string, mapVariableName string, mathFnName string, outputFilePath string) error {
 	directiveMap, err := extractDirectiveMapFromFolder(codePath)
 	if err != nil {
 		return err
+	}
+
+	postProcFn, found := module2postProcFns[moduleName]
+	if found {
+		err = postProcFn(directiveMap)
+		if err != nil {
+			return err
+		}
 	}
 
 	directory := filepath.Dir(outputFilePath)

@@ -28,11 +28,18 @@ const (
 	tmpRootDir      = "./generator_tmp"
 )
 
+const (
+	luaModuleName          = "lua"
+	heardersMoreModuleName = "headersMore"
+	njsModuleName          = "njs"
+	otelModuleName         = "otel"
+)
+
 var module2git = map[string]string{
-	"headersMore": "https://github.com/openresty/headers-more-nginx-module.git",
-	"lua":         "https://github.com/openresty/lua-nginx-module.git",
-	"njs":         "https://github.com/nginx/njs.git",
-	"otel":        "https://github.com/nginxinc/nginx-otel.git",
+	heardersMoreModuleName: "https://github.com/openresty/headers-more-nginx-module.git",
+	luaModuleName:          "https://github.com/openresty/lua-nginx-module.git",
+	njsModuleName:          "https://github.com/nginx/njs.git",
+	otelModuleName:         "https://github.com/nginxinc/nginx-otel.git",
 }
 
 // var headersMoreDirectives = map[string][]uint{
@@ -212,7 +219,7 @@ func generateOSS() error {
 				}
 				matchFnName := fmt.Sprintf("MatchOss%s", ossVerStr)
 				fileName := fmt.Sprintf("./ngx_oss_%s_directives.go", ossVerStr)
-				generateSupportFileFromCode(ossTmpDir, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName))
+				generateSupportFileFromCode(ossTmpDir, "OSS", fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName))
 				matchFnList = append(matchFnList, matchFnName)
 			}
 		}
@@ -273,7 +280,7 @@ func generateModuleFromWeb(moduleName string) error {
 		return err
 	}
 
-	err = generateSupportFileFromCode(moduleTmpDir, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)))
+	err = generateSupportFileFromCode(moduleTmpDir, moduleName, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)))
 	if err != nil {
 		return err
 	}
@@ -336,7 +343,7 @@ func main() {
 			fmt.Println("Please provide the module name, -h or --help for help")
 			return
 		}
-		err := generateSupportFileFromCode(*sourceCodePath, getModuleMapName(*moduleName), getModuleMatchFnName(*moduleName), path.Join(*outputFolder, getModuleFileName(*moduleName)))
+		err := generateSupportFileFromCode(*sourceCodePath, *moduleName, getModuleMapName(*moduleName), getModuleMatchFnName(*moduleName), path.Join(*outputFolder, getModuleFileName(*moduleName)))
 		if err != nil {
 			fmt.Println("Generate failed, error:")
 			fmt.Println(err.Error())
