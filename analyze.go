@@ -108,11 +108,11 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 		}
 	}
 
-	// If DirectiveSources was not provided, try to find the directive in origin way.
+	// If DirectiveSources was not provided, try to find the directive in legacy way.
 	// We want to use DirectiveSources to indicate the OSS/N+ version, and dynamic
 	// modules we want to include for validation. However, invokers used MatchFuncs
-	// and a dafault map before. This is a transition plan. After MatchFuncs is deleted
-	// from ParseOptions, this part should be deleted.
+	// and a directive map before. This is a transition plan. After MatchFuncs is deleted
+	// from ParseOptions, this if block should be deleted.
 	if len(options.DirectiveSources) == 0 {
 		masks, knownDirective = directives[directiveName]
 		if !knownDirective {
