@@ -1934,7 +1934,7 @@ var ngxOss124Directives = map[string][]uint{
 	},
 }
 
-func MatchOss124(directive string) ([]uint, bool) {
+func Oss124DirectivesMatchFn(directive string) ([]uint, bool) {
 	masks, matched := ngxOss124Directives[directive]
 	return masks, matched
 }

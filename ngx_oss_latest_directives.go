@@ -10,7 +10,7 @@
 package crossplane
 
 //nolint:gochecknoglobals
-var ngxOsslatestDirectives = map[string][]uint{
+var ngxOssLatestDirectives = map[string][]uint{
 	"absolute_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
@@ -1967,7 +1967,7 @@ var ngxOsslatestDirectives = map[string][]uint{
 	},
 }
 
-func MatchOsslatest(directive string) ([]uint, bool) {
-	masks, matched := ngxOsslatestDirectives[directive]
+func OssLatestDirectivesMatchFn(directive string) ([]uint, bool) {
+	masks, matched := ngxOssLatestDirectives[directive]
 	return masks, matched
 }

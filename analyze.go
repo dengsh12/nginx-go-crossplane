@@ -9,14 +9,7 @@ package crossplane
 
 import (
 	"fmt"
-	"reflect"
 )
-
-var ngxPlusMatchFuns = map[uintptr]interface{}{
-	reflect.ValueOf(MatchNgxPlusR31).Pointer(): nil,
-}
-var latestOssMatchFn = MatchOsslatest
-var latestNPlusMatchFn = MatchNgxPlusR31
 
 // bit masks for different directive argument styles.
 const (
@@ -130,8 +123,6 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 			}
 		}
 	}
-
-	currCtx, knownContext := contexts[ctx.key()]
 
 	// if strict and directive isn't recognized then throw error
 	if options.ErrorOnUnknownDirectives && !knownDirective {

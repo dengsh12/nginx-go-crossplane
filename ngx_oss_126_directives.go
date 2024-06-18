@@ -1967,7 +1967,7 @@ var ngxOss126Directives = map[string][]uint{
 	},
 }
 
-func MatchOss126(directive string) ([]uint, bool) {
+func Oss126DirectivesMatchFn(directive string) ([]uint, bool) {
 	masks, matched := ngxOss126Directives[directive]
 	return masks, matched
 }

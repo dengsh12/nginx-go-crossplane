@@ -32,6 +32,8 @@ const (
 	heardersMoreModuleName = "headersMore"
 	njsModuleName          = "njs"
 	otelModuleName         = "otel"
+	ossName                = "OSS"
+	nPlusName              = "NPLUS"
 )
 
 var module2git = map[string]string{
@@ -98,7 +100,7 @@ func testRun() {
 }
 
 func generateOSS() error {
-	ossTmpDir := path.Join(tmpRootDir, "OSS")
+	ossTmpDir := path.Join(tmpRootDir, ossName)
 	if directoryExists(ossTmpDir) {
 		err := os.RemoveAll(ossTmpDir)
 		if err != nil {
@@ -199,14 +201,14 @@ func generateOSS() error {
 				}
 				ossVerStr := ""
 				if strings.Contains(branchName, "master") {
-					ossVerStr = "latest"
+					ossVerStr = "Latest"
 				} else {
 					ossVerStr = strings.Split(branchName, "-")[1]
 					ossVerStr = strings.Join(strings.Split(ossVerStr, "."), "")
 				}
-				matchFnName := fmt.Sprintf("MatchOss%s", ossVerStr)
-				fileName := fmt.Sprintf("./ngx_oss_%s_directives.go", ossVerStr)
-				generateSupportFileFromCode(ossTmpDir, "OSS", fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName))
+				matchFnName := fmt.Sprintf("Oss%sDirectivesMatchFn", ossVerStr)
+				fileName := fmt.Sprintf("./ngx_oss_%s_directives.go", lowercaseStrFirstChar(ossVerStr))
+				generateSupportFileFromCode(ossTmpDir, ossName, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName))
 				matchFnList = append(matchFnList, matchFnName)
 			}
 		}
@@ -215,17 +217,7 @@ func generateOSS() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
-}
-
-func normalizeModuleName(moduleName string) string {
-	// Make the first char in module name as uppercase, align with golang variable name conventions
-	moduleNameRunes := []rune(moduleName)
-	if moduleNameRunes[0] >= 'a' && moduleNameRunes[0] <= 'z' {
-		moduleNameRunes[0] += 'A' - 'a'
-	}
-	return string(moduleNameRunes)
 }
 
 func generateModuleFromWeb(moduleName string) error {
@@ -313,7 +305,7 @@ func main() {
 		if err != nil {
 			fmt.Printf("generation for %s failed, reason: %s", *moduleName, err.Error())
 		} else {
-			fmt.Printf("generation for %s success, file:%s", *moduleName, getModuleFileName(*moduleName))
+			fmt.Printf("generation for %s success", *moduleName)
 		}
 		fmt.Println()
 	} else if *function == "code2map" {
