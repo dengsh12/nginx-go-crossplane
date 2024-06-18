@@ -44,9 +44,9 @@ var appProtectWAFv5Directives = map[string][]uint{
 	},
 }
 
-// MatchAppProtectWAFv5 is a match function for parsing an NGINX config that contains the
+// AppProtectWAFv4DirectivesMatchFn is a match function for parsing an NGINX config that contains the
 // App Protect v5 module.
-func MatchAppProtectWAFv5(directive string) ([]uint, bool) {
+func AppProtectWAFv5DirectivesMatchFn(directive string) ([]uint, bool) {
 	masks, matched := appProtectWAFv5Directives[directive]
 	return masks, matched
 }
