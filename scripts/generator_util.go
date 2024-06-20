@@ -26,6 +26,7 @@ const (
 	ngxMatchFnListFile             = "./ngx_matchFn_list.go"
 )
 
+// todo: delete this
 var specialBitmaskNameMatch = map[string]string{
 	"HTTP":   "HTTP",
 	"1MORE":  "1More",

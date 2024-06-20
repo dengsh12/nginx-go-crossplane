@@ -43,25 +43,6 @@ var module2git = map[string]string{
 	otelModuleName:         "https://github.com/nginxinc/nginx-otel.git",
 }
 
-// var headersMoreDirectives = map[string][]uint{
-// 	"more_set_headers": {
-// 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConf1More,
-// 	},
-// 	"more_clear_headers": {
-// 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConf1More,
-// 	},
-// 	"more_set_input_headers": {
-// 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConf1More,
-// 	},
-// 	"more_clear_input_headers": {
-// 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConf1More,
-// 	},
-// }
-// func MatchHeadersMore(directive string) ([]uint, bool) {
-// 	masks, matched := headersMoreDirectives[directive]
-// 	return masks, matched
-// }
-
 func compare2directiveMap(correct map[string][]uint, generated map[string][]uint) {
 	for directiveName, bitmask := range correct {
 		mBitMask, find := generated[directiveName]
@@ -95,6 +76,7 @@ func compare2directiveMap(correct map[string][]uint, generated map[string][]uint
 	}
 }
 
+// todo: delete it
 func testRun() {
 	// compare2directiveMap(crossplane.LuaDirectives, crossplane.ModuleLuaDirectives)
 }
@@ -271,8 +253,6 @@ func generateFromWeb(moduleName string) error {
 }
 
 func main() {
-	// testRun()
-	// return
 	start_t := time.Now()
 	var (
 		function       = flag.String("func", "", "the function you need, should be code2map, code2json, generate, or json2map (required)")
@@ -325,33 +305,4 @@ func main() {
 	}
 
 	fmt.Println("use time:" + time.Since(start_t).String())
-	// fmt.Println(*moduleName)
-
-	// directiveMap, _ := crossplane.ExtractDirectiveMapFromFolder(path)
-
-	// compare2directiveMap(crossplane.CrossplaneDirectives, crossplane.ModuleNjsDirectives)
-
-	// for key, value := range directiveMap {
-	// 	fmt.Print(key)
-	// 	fmt.Print(":")
-	// 	fmt.Println()
-	// 	for _, bitmasks := range value {
-	// 		for _, bitmask := range bitmasks {
-	// 			fmt.Print(bitmask)
-	// 			fmt.Print("|")
-	// 		}
-	// 		fmt.Println()
-	// 	}
-	// }
-	// payload, err := crossplane.Parse(path, &crossplane.ParseOptions{})
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// b, err := json.Marshal(payload)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// fmt.Println(string(b))
 }

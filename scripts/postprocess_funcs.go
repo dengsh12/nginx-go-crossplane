@@ -17,8 +17,8 @@ var argsNumBitmasks = []string{
 	"ngxConfTake7",
 }
 
-// for lua module, we remove ngxConfBlock and add args num by 1
-// see PR: https://github.com/nginxinc/nginx-go-crossplane/pull/86
+// For lua module, we remove ngxConfBlock and add args num by 1
+// See PR: https://github.com/nginxinc/nginx-go-crossplane/pull/86
 func postProcLuaMap(directivesMap map[string][][]string) error {
 	for directive, bitmaskNamesList := range directivesMap {
 		for dirIdx, bitmaskNames := range bitmaskNamesList {
