@@ -20,9 +20,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"accept_mutex_delay": {
 		ngxEventConf | ngxConfTake1,
 	},
-	"acceptex_read": {
-		ngxEventConf | ngxConfFlag,
-	},
 	"access_log": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxHTTPLmtConf | ngxConf1More,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConf1More,
@@ -163,21 +160,9 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"default_type": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
-	"degradation": {
-		ngxHTTPMainConf | ngxConfTake1,
-	},
-	"degrade": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-	},
 	"deny": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLmtConf | ngxConfTake1,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
-	},
-	"devpoll_changes": {
-		ngxEventConf | ngxConfTake1,
-	},
-	"devpoll_events": {
-		ngxEventConf | ngxConfTake1,
 	},
 	"directio": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
@@ -194,9 +179,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"env": {
 		ngxMainConf | ngxDirectConf | ngxConfTake1,
 	},
-	"epoll_events": {
-		ngxEventConf | ngxConfTake1,
-	},
 	"error_log": {
 		ngxMainConf | ngxConf1More,
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConf1More,
@@ -208,9 +190,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	},
 	"etag": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
-	},
-	"eventport_events": {
-		ngxEventConf | ngxConfTake1,
 	},
 	"events": {
 		ngxMainConf | ngxConfBlock | ngxConfNoArgs,
@@ -495,17 +474,11 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"gzip_disable": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConf1More,
 	},
-	"gzip_hash": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-	},
 	"gzip_http_version": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"gzip_min_length": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-	},
-	"gzip_no_buffer": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
 	"gzip_proxied": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConf1More,
@@ -518,9 +491,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	},
 	"gzip_vary": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
-	},
-	"gzip_window": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"hash": {
 		ngxHTTPUpsConf | ngxConfTake12,
@@ -556,9 +526,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"http2_max_requests": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 	},
-	"http2_pool_size": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
-	},
 	"http2_push": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
@@ -569,9 +536,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 		ngxHTTPMainConf | ngxConfTake1,
 	},
 	"http2_recv_timeout": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
-	},
-	"http2_streams_index_size": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 	},
 	"http3": {
@@ -634,9 +598,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"internal": {
 		ngxHTTPLocConf | ngxConfNoArgs,
 	},
-	"iocp_threads": {
-		ngxEventConf | ngxConfTake1,
-	},
 	"ip_hash": {
 		ngxHTTPUpsConf | ngxConfNoArgs,
 	},
@@ -657,12 +618,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"keepalive_timeout": {
 		ngxHTTPUpsConf | ngxConfTake1,
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake12,
-	},
-	"kqueue_changes": {
-		ngxEventConf | ngxConfTake1,
-	},
-	"kqueue_events": {
-		ngxEventConf | ngxConfTake1,
 	},
 	"large_client_header_buffers": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake2,
@@ -849,9 +804,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"open_file_cache_errors": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
-	"open_file_cache_events": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
-	},
 	"open_file_cache_min_uses": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
@@ -898,15 +850,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	"port_in_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
-	"post_acceptex": {
-		ngxEventConf | ngxConfTake1,
-	},
-	"post_action": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConfTake1,
-	},
-	"postpone_gzipping": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-	},
 	"postpone_output": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
@@ -918,9 +861,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	},
 	"protocol": {
 		ngxMailSrvConf | ngxConfTake1,
-	},
-	"proxy": {
-		ngxMailMainConf | ngxMailSrvConf | ngxConfFlag,
 	},
 	"proxy_bind": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake12,
@@ -1001,9 +941,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake12,
 	},
 	"proxy_download_rate": {
-		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
-	},
-	"proxy_downstream_buffer": {
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"proxy_force_ranges": {
@@ -1186,9 +1123,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"proxy_upload_rate": {
-		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
-	},
-	"proxy_upstream_buffer": {
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"quic_active_connection_id_limit": {
@@ -1475,9 +1409,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	},
 	"ssi": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConfFlag,
-	},
-	"ssi_ignore_recycled_buffers": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
 	"ssi_last_modified": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
@@ -1892,9 +1823,6 @@ var ngxOssLatestDirectives = map[string][]uint{
 	},
 	"uwsgi_store_access": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake123,
-	},
-	"uwsgi_string": {
-		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"uwsgi_temp_file_write_size": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,

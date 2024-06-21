@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/fs"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,6 +11,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 const (
@@ -63,6 +66,8 @@ var ngxBitmaskNameToGo = map[string]string{
 	"NGX_HTTP_LOC_CONF":    "ngxHTTPLocConf",
 	"NGX_STREAM_SRV_CONF":  "ngxStreamSrvConf",
 	"NGX_DIRECT_CONF":      "ngxDirectConf",
+	"NGX_CONF_TAKE13":      "ngxConfTake13",
+	"NGX_CONF_ANY":         "ngxConfAny",
 }
 
 var allDirectiveContexts = map[string]interface{}{
@@ -212,10 +217,22 @@ func getLineSeperator() string {
 	return "\n"
 }
 
-func generateSupportFileFromCode(codePath string, moduleName string, mapVariableName string, mathFnName string, outputFilePath string) error {
+func generateSupportFileFromCode(codePath string, moduleName string, mapVariableName string, mathFnName string, outputFilePath string, filter map[string]interface{}) error {
 	directiveMap, err := extractDirectiveMapFromFolder(codePath)
 	if err != nil {
 		return err
+	}
+
+	if filter != nil {
+		directivesToDelete := []string{}
+		for directve, _ := range directiveMap {
+			if _, found := filter[directve]; !found {
+				directivesToDelete = append(directivesToDelete, directve)
+			}
+		}
+		for _, directive := range directivesToDelete {
+			delete(directiveMap, directive)
+		}
 	}
 
 	postProcFn, found := module2postProcFns[moduleName]
@@ -409,4 +426,34 @@ func outputMap(toOutput map[string]string) {
 	for k, v := range toOutput {
 		fmt.Printf("\"%s\":\"%s\",\n", k, v)
 	}
+}
+
+func fetchDocumentedDirctives() (map[string]interface{}, error) {
+	documentedDirectives := map[string]interface{}{}
+	documentURL := "https://nginx.org/en/docs/dirindex.html"
+
+	res, err := http.Get(documentURL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	// Check the status code.
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
+	}
+
+	// Load the HTML document.
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find the #content a elements to get documented directives
+	doc.Find("#content a").Each(func(i int, s *goquery.Selection) {
+		text := s.Text()
+		documentedDirectives[text] = nil
+	})
+
+	return documentedDirectives, nil
 }

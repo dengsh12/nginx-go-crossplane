@@ -78,7 +78,12 @@ func compare2directiveMap(correct map[string][]uint, generated map[string][]uint
 
 // todo: delete it
 func testRun() {
-	// compare2directiveMap(crossplane.LuaDirectives, crossplane.ModuleLuaDirectives)
+	documentedDirectives, err := fetchDocumentedDirctives()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(documentedDirectives)
 }
 
 func generateOSS() error {
@@ -93,7 +98,8 @@ func generateOSS() error {
 	defer os.RemoveAll(tmpRootDir)
 
 	repo, err := git.PlainClone(ossTmpDir, false, &git.CloneOptions{
-		URL: ossRepo,
+		URL:   ossRepo,
+		Depth: 1,
 	})
 
 	if err != nil {
@@ -170,6 +176,10 @@ func generateOSS() error {
 	if err != nil {
 		return err
 	}
+	filter, err := fetchDocumentedDirctives()
+	if err != nil {
+		return err
+	}
 
 	err = refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
@@ -190,7 +200,7 @@ func generateOSS() error {
 				}
 				matchFnName := fmt.Sprintf("Oss%sDirectivesMatchFn", ossVerStr)
 				fileName := fmt.Sprintf("./ngx_oss_%s_directives.go", lowercaseStrFirstChar(ossVerStr))
-				generateSupportFileFromCode(ossTmpDir, ossName, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName))
+				generateSupportFileFromCode(ossTmpDir, ossName, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName), filter)
 				matchFnList = append(matchFnList, matchFnName)
 			}
 		}
@@ -225,6 +235,7 @@ func generateModuleFromWeb(moduleName string) error {
 	_, err = git.PlainClone(moduleTmpDir, false, &git.CloneOptions{
 		URL:      repoURL,
 		Progress: nil,
+		Depth:    1,
 	})
 
 	if err != nil {
@@ -236,7 +247,7 @@ func generateModuleFromWeb(moduleName string) error {
 		return err
 	}
 
-	err = generateSupportFileFromCode(moduleTmpDir, moduleName, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)))
+	err = generateSupportFileFromCode(moduleTmpDir, moduleName, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)), nil)
 	if err != nil {
 		return err
 	}
@@ -253,13 +264,15 @@ func generateFromWeb(moduleName string) error {
 }
 
 func main() {
+	// testRun()
 	start_t := time.Now()
 	var (
-		function       = flag.String("func", "", "the function you need, should be code2map, code2json, generate, or json2map (required)")
-		sourceCodePath = flag.String("source_code", "", "the folder includes the source code your want to generate support from (required when func=code2map or code2json)")
-		_              = flag.String("json_file", "", "the folder of the json file you want to generate support from (required when func=json2map)")
-		moduleName     = flag.String("module_name", "", "OSS, NPLUS, or the name of the module(required)")
-		outputFolder   = flag.String("output_folder", "./tmp", "the folder at which the generated support file locates, ./tmp by default(optional)")
+		function           = flag.String("func", "", "the function you need, should be code2map, code2json, generate, or json2map (required)")
+		sourceCodePath     = flag.String("source_code", "", "the folder includes the source code your want to generate support from (required when func=code2map or code2json)")
+		_                  = flag.String("json_file", "", "the folder of the json file you want to generate support from (required when func=json2map)")
+		moduleName         = flag.String("module_name", "", "OSS, NPLUS, or the name of the module(required)")
+		outputFolder       = flag.String("output_folder", "./tmp", "the folder at which the generated support file locates, ./tmp by default(optional)")
+		onlyDocumentedDirs = flag.Bool("documented_only", false, "only output consider directives on https://nginx.org/en/docs/dirindex.html, optional, false by default")
 	)
 	flag.Parse()
 	validFunctions := []string{"code2map", "code2json", "json2map", "generate"}
@@ -297,7 +310,15 @@ func main() {
 			fmt.Println("Please provide the module name, -h or --help for help")
 			return
 		}
-		err := generateSupportFileFromCode(*sourceCodePath, *moduleName, getModuleMapName(*moduleName), getModuleMatchFnName(*moduleName), path.Join(*outputFolder, getModuleFileName(*moduleName)))
+		var filter map[string]interface{}
+		var err error
+		if *onlyDocumentedDirs {
+			filter, err = fetchDocumentedDirctives()
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+		err = generateSupportFileFromCode(*sourceCodePath, *moduleName, getModuleMapName(*moduleName), getModuleMatchFnName(*moduleName), path.Join(*outputFolder, getModuleFileName(*moduleName)), filter)
 		if err != nil {
 			fmt.Println("Generate failed, error:")
 			fmt.Println(err.Error())
