@@ -34,5 +34,6 @@ coverage.*
 tmp/*
 scripts/generated
 scripts/sourcecodes
-
+scripts/output
+scripts/tmp
 
