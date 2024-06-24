@@ -1,8 +1,8 @@
-//go:generate go run generator.go generator_util.go postprocess_funcs.go --func=generate --module_name=lua
-//go:generate go run generator.go generator_util.go postprocess_funcs.go --func=generate --module_name=headersMore
-//go:generate go run generator.go generator_util.go postprocess_funcs.go  --func=generate --module_name=njs
-//go:generate go run generator.go generator_util.go postprocess_funcs.go  --func=generate --module_name=otel
-//go:generate go run generator.go generator_util.go postprocess_funcs.go  --func=generate --module_name=OSS
+//go:generate go run generator.go generator_util.go postprocess_funcs.go generate_funcs.go --func=generate --module_name=lua
+//go:generate go run generator.go generator_util.go postprocess_funcs.go generate_funcs.go --func=generate --module_name=headersMore
+//go:generate go run generator.go generator_util.go postprocess_funcs.go generate_funcs.go  --func=generate --module_name=njs
+//go:generate go run generator.go generator_util.go postprocess_funcs.go generate_funcs.go --func=generate --module_name=otel
+//go:generate go run generator.go generator_util.go postprocess_funcs.go generate_funcs.go --func=generate --module_name=OSS
 
 package main
 
