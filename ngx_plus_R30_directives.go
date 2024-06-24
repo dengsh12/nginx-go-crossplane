@@ -17,7 +17,7 @@
 package crossplane
 
 //nolint:gochecknoglobals
-var moduleNPLatestDirectives = map[string][]uint{
+var ngxPlusR30Directives = map[string][]uint{
 	"absolute_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
@@ -172,9 +172,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	},
 	"client_max_body_size": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-	},
-	"connect_timeout": {
-		ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"connection_pool_size": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
@@ -697,8 +694,8 @@ var moduleNPLatestDirectives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake12,
 	},
 	"keyval": {
-		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake2,
-		ngxStreamMainConf | ngxConfTake3 | ngxConfTake2,
+		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake4,
+		ngxStreamMainConf | ngxConfTake3 | ngxConfTake4,
 	},
 	"keyval_zone": {
 		ngxHTTPMainConf | ngxConf1More,
@@ -756,7 +753,7 @@ var moduleNPLatestDirectives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"limit_req_zone": {
-		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake2,
+		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake4,
 	},
 	"lingering_close": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
@@ -855,9 +852,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"merge_slashes": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfFlag,
 	},
-	"mgmt": {
-		ngxMainConf | ngxDirectConf | ngxConfBlock | ngxConfNoArgs,
-	},
 	"min_delete_depth": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
@@ -939,9 +933,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	},
 	"override_charset": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConfFlag,
-	},
-	"pass": {
-		ngxStreamSrvConf | ngxConfTake1,
 	},
 	"pcre_jit": {
 		ngxMainConf | ngxDirectConf | ngxConfFlag,
@@ -1279,9 +1270,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"read_ahead": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
-	"read_timeout": {
-		ngxConfTake1 | ngxMgmtMainConf,
-	},
 	"real_ip_header": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
@@ -1307,7 +1295,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConf1More,
 		ngxHTTPUpsConf | ngxConf1More,
 		ngxMailMainConf | ngxMailSrvConf | ngxConf1More,
-		ngxConf1More | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConf1More,
 		ngxStreamUpsConf | ngxConf1More,
 	},
@@ -1315,7 +1302,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 		ngxHTTPUpsConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 		ngxStreamUpsConf | ngxConfTake1,
 	},
@@ -1484,7 +1470,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	},
 	"send_timeout": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"sendfile": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConfFlag,
@@ -1502,18 +1487,15 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"server_name": {
 		ngxHTTPSrvConf | ngxConf1More,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxStreamSrvConf | ngxConf1More,
 	},
 	"server_name_in_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
 	"server_names_hash_bucket_size": {
 		ngxHTTPMainConf | ngxConfTake1,
-		ngxStreamMainConf | ngxConfTake1,
 	},
 	"server_names_hash_max_size": {
 		ngxHTTPMainConf | ngxConfTake1,
-		ngxStreamMainConf | ngxConfTake1,
 	},
 	"server_tokens": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
@@ -1576,9 +1558,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssi_value_length": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
-	"ssl": {
-		ngxConfFlag | ngxMgmtMainConf,
-	},
 	"ssl_alpn": {
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConf1More,
 	},
@@ -1588,19 +1567,16 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssl_certificate": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_certificate_key": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_ciphers": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_client_certificate": {
@@ -1616,7 +1592,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssl_crl": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_dhparam": {
@@ -1638,9 +1613,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssl_handshake_timeout": {
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
-	"ssl_name": {
-		ngxConfTake1 | ngxMgmtMainConf,
-	},
 	"ssl_ocsp": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfFlag,
 	},
@@ -1653,7 +1625,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssl_password_file": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"ssl_prefer_server_ciphers": {
@@ -1667,15 +1638,10 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssl_protocols": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConf1More,
 		ngxMailMainConf | ngxMailSrvConf | ngxConf1More,
-		ngxConf1More | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConf1More,
 	},
 	"ssl_reject_handshake": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfFlag,
-		ngxStreamMainConf | ngxStreamSrvConf | ngxConfFlag,
-	},
-	"ssl_server_name": {
-		ngxConfFlag | ngxMgmtMainConf,
 	},
 	"ssl_session_cache": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake12,
@@ -1712,11 +1678,7 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssl_trusted_certificate": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
-	},
-	"ssl_verify": {
-		ngxConfFlag | ngxMgmtMainConf,
 	},
 	"ssl_verify_client": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
@@ -1726,7 +1688,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	"ssl_verify_depth": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfTake1,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
-		ngxConfTake1 | ngxMgmtMainConf,
 		ngxStreamMainConf | ngxStreamSrvConf | ngxConfTake1,
 	},
 	"starttls": {
@@ -1806,9 +1767,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 		ngxHTTPMainConf | ngxConfBlock | ngxConfTake1,
 		ngxStreamMainConf | ngxConfBlock | ngxConfTake1,
 	},
-	"usage_report": {
-		ngxConfNoArgs | ngxConfTake12 | ngxMgmtMainConf,
-	},
 	"use": {
 		ngxEventConf | ngxConfTake1,
 	},
@@ -1841,9 +1799,6 @@ var moduleNPLatestDirectives = map[string][]uint{
 	},
 	"userid_service": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
-	},
-	"uuid_file": {
-		ngxConfNoArgs | ngxConfTake1 | ngxMgmtMainConf,
 	},
 	"uwsgi_bind": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake12,
@@ -2153,7 +2108,7 @@ var moduleNPLatestDirectives = map[string][]uint{
 	},
 }
 
-func NPLatestDirectivesMatchFn(directive string) ([]uint, bool) {
-	masks, matched := moduleNPLatestDirectives[directive]
+func NgxPlusR30DirectivesMatchFn(directive string) ([]uint, bool) {
+	masks, matched := ngxPlusR30Directives[directive]
 	return masks, matched
 }

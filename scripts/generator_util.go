@@ -70,7 +70,7 @@ var ngxBitmaskNameToGo = map[string]string{
 	"NGX_DIRECT_CONF":      "ngxDirectConf",
 	"NGX_CONF_TAKE13":      "ngxConfTake13",
 	"NGX_CONF_ANY":         "ngxConfAny",
-	"NGX_CONF_TAKE4":       "ngxConfTake2",
+	"NGX_CONF_TAKE4":       "ngxConfTake4",
 }
 
 var allDirectiveContexts = map[string]interface{}{

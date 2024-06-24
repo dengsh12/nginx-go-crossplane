@@ -17,7 +17,7 @@
 package crossplane
 
 //nolint:gochecknoglobals
-var NgxPlusR31Directives = map[string][]uint{
+var NgxPlusLatestDirectives = map[string][]uint{
 	"absolute_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
@@ -697,8 +697,8 @@ var NgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake12,
 	},
 	"keyval": {
-		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake4,
-		ngxStreamMainConf | ngxConfTake3 | ngxConfTake4,
+		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake2,
+		ngxStreamMainConf | ngxConfTake3 | ngxConfTake2,
 	},
 	"keyval_zone": {
 		ngxHTTPMainConf | ngxConf1More,
@@ -756,7 +756,7 @@ var NgxPlusR31Directives = map[string][]uint{
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
 	},
 	"limit_req_zone": {
-		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake4,
+		ngxHTTPMainConf | ngxConfTake3 | ngxConfTake2,
 	},
 	"lingering_close": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
@@ -939,6 +939,9 @@ var NgxPlusR31Directives = map[string][]uint{
 	},
 	"override_charset": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPLifConf | ngxConfFlag,
+	},
+	"pass": {
+		ngxStreamSrvConf | ngxConfTake1,
 	},
 	"pcre_jit": {
 		ngxMainConf | ngxDirectConf | ngxConfFlag,
@@ -1499,15 +1502,18 @@ var NgxPlusR31Directives = map[string][]uint{
 	"server_name": {
 		ngxHTTPSrvConf | ngxConf1More,
 		ngxMailMainConf | ngxMailSrvConf | ngxConfTake1,
+		ngxStreamSrvConf | ngxConf1More,
 	},
 	"server_name_in_redirect": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfFlag,
 	},
 	"server_names_hash_bucket_size": {
 		ngxHTTPMainConf | ngxConfTake1,
+		ngxStreamMainConf | ngxConfTake1,
 	},
 	"server_names_hash_max_size": {
 		ngxHTTPMainConf | ngxConfTake1,
+		ngxStreamMainConf | ngxConfTake1,
 	},
 	"server_tokens": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfTake1,
@@ -1666,6 +1672,7 @@ var NgxPlusR31Directives = map[string][]uint{
 	},
 	"ssl_reject_handshake": {
 		ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfFlag,
+		ngxStreamMainConf | ngxStreamSrvConf | ngxConfFlag,
 	},
 	"ssl_server_name": {
 		ngxConfFlag | ngxMgmtMainConf,
@@ -2146,7 +2153,7 @@ var NgxPlusR31Directives = map[string][]uint{
 	},
 }
 
-func NgxPlusR31DirectivesMatchFn(directive string) ([]uint, bool) {
-	masks, matched := NgxPlusR31Directives[directive]
+func NgxPlusLatestDirectivesMatchFn(directive string) ([]uint, bool) {
+	masks, matched := NgxPlusLatestDirectives[directive]
 	return masks, matched
 }
