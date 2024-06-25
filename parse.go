@@ -104,17 +104,12 @@ type ParseOptions struct {
 	// If true, checks that directives have a valid number of arguments.
 	SkipDirectiveArgsCheck bool
 
-	// MatchFuncs are called in order when an unknown or non-core NGINX directive is
-	// encountered by the parser to determine the valid contexts and argument count of the
-	// directive. Set this option to enable parsing of directives belonging to non-core or
-	// dynamic NGINX modules that follow the usual grammar rules of an NGINX configuration.
-	// If DirectiveSources was provided, this will be ignored.
-	MatchFuncs []MatchFunc
-
 	// An array of MatchFunc, which is used to indicate the OSS/N+ version, and
 	// dynamic modules you want to include for validation. If a directive matches
 	// any of them, and satisfies the corresponding bitmask, it should pass the validation.
-	// If we provide this, MatchFuncs will be ignored
+	// If this is provided, it will be the only source of directives included for validation.
+	// If this is not provided, a default map(NPlus, Njs, and Otel in it) will be included
+	// for validation.
 	DirectiveSources []MatchFunc
 
 	LexOptions LexOptions
