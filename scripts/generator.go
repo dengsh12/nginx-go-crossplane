@@ -39,6 +39,7 @@ var module2git = map[string]string{
 	otelModuleName:         "https://github.com/nginxinc/nginx-otel.git",
 }
 
+// todo: delete it
 func compare2directiveMap(correct map[string][]uint, generated map[string][]uint) {
 	for directiveName, bitmask := range correct {
 		mBitMask, find := generated[directiveName]
@@ -73,13 +74,42 @@ func compare2directiveMap(correct map[string][]uint, generated map[string][]uint
 }
 
 // todo: delete it
-func testRun() {
-	documentedDirectives, err := fetchDocumentedDirctives()
-	if err != nil {
-		fmt.Println(err)
-		return
+func compare2directiveMapWithMatchFn(correct map[string][]uint, matchFn func(directive string) (masks []uint, matched bool)) {
+	for directiveName, bitmask := range correct {
+		mBitMask, find := matchFn(directiveName)
+		if !find {
+			fmt.Println(directiveName + " no found")
+			continue
+		}
+		sort.Slice(mBitMask, func(i, j int) bool {
+			return mBitMask[i] > mBitMask[j]
+		})
+		sort.Slice(bitmask, func(i, j int) bool {
+			return bitmask[i] > bitmask[j]
+		})
+		if len(bitmask) != len(mBitMask) {
+			fmt.Println(directiveName + " no same len")
+			continue
+		}
+		sameV := true
+		humanV := false
+		for idx, v := range mBitMask {
+			if v != bitmask[idx] {
+				sameV = false
+			}
+			if bitmask[idx]&uint(0x00020000) != 0 {
+				humanV = true
+			}
+		}
+		if !sameV && !humanV {
+			fmt.Println(directiveName + " no same v")
+		}
 	}
-	fmt.Println(documentedDirectives)
+}
+
+// todo: delete it
+func testRun() {
+	// compare2directiveMapWithMatchFn(crossplane.AppProtectWAFv5Directives, crossplane.AppProtectWAFv5DirectivesMatchFn)
 }
 
 func generateModuleFromWeb(moduleName string) error {
@@ -135,6 +165,7 @@ func generate(moduleName string) error {
 
 func main() {
 	// testRun()
+	// return
 	start_t := time.Now()
 	var (
 		function           = flag.String("func", "", "the function you need, should be code2map, code2json, generate, or json2map (required)")
