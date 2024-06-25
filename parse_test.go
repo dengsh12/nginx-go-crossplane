@@ -1347,7 +1347,7 @@ var parseFixtures = []parseFixture{
 	{"nap-waf-v4", "", ParseOptions{
 		SingleFile:               true,
 		ErrorOnUnknownDirectives: true,
-		DirectiveSources:         []MatchFunc{NgxPlusLatestDirectivesMatchFn, MatchAppProtectWAFv4},
+		DirectiveSources:         []MatchFunc{NgxPlusLatestDirectivesMatchFn, AppProtectWAFv4DirectivesMatchFn},
 	}, Payload{
 		Status: "ok",
 		Errors: []PayloadError{},
@@ -1492,7 +1492,7 @@ var parseFixtures = []parseFixture{
 	{"nap-waf-v5", "", ParseOptions{
 		SingleFile:               true,
 		ErrorOnUnknownDirectives: true,
-		DirectiveSources:         []MatchFunc{NgxPlusLatestDirectivesMatchFn, MatchAppProtectWAFv5},
+		DirectiveSources:         []MatchFunc{NgxPlusLatestDirectivesMatchFn, AppProtectWAFv5DirectivesMatchFn},
 	}, Payload{
 		Status: "ok",
 		Errors: []PayloadError{},
