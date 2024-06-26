@@ -13,6 +13,10 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
+const (
+	tmpDirPattern = "generator_tmp_"
+)
+
 type codeGenerator interface {
 	generateFromWeb() error
 }
@@ -48,11 +52,6 @@ func (generator *normalGenerator) generateFromWeb() error {
 	sourceName := generator.sourceName
 	repoURL := generator.repoURL
 
-	repoURL, found := module2git[sourceName]
-	if !found {
-		return fmt.Errorf("can't find git repo for module {%s}, make sure it is in the module2git map (in ./scripts/generator_script.go)", moduleName)
-	}
-
 	tmpDir, err := os.MkdirTemp("", tmpDirPattern)
 	if err != nil {
 		return err
@@ -61,12 +60,7 @@ func (generator *normalGenerator) generateFromWeb() error {
 
 	// Clone the repository
 
-	_, err = git.PlainClone(tmpDir, false, &git.CloneOptions{
-		URL:      repoURL,
-		Progress: nil,
-		Depth:    1,
-	})
-
+	err = gitClone(tmpDir, repoURL, 1)
 	if err != nil {
 		return err
 	}

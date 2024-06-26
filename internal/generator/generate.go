@@ -12,7 +12,6 @@ import (
 const (
 	ossRepo         = "https://github.com/nginx/nginx.git"
 	ossVersionLimit = 3
-	tmpDirPattern   = "./generator_tmp_"
 )
 
 const (
