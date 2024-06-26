@@ -8,7 +8,9 @@
 package crossplane
 
 // A human editable map. Used to overwrite generated directive definitions for special cases.
-var forced_map = map[string][]uint{
+//
+//nolint:gochecknoglobals
+var forcedMap = map[string][]uint{
 	"if": {
 		ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfBlock | ngxConfExpr | ngxConf1More,
 	},

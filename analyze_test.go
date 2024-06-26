@@ -2550,7 +2550,6 @@ func TestAnalyze_directiveSources_orLogic(t *testing.T) {
 	}
 }
 
-//nolint:funlen
 func TestAnalyze_directiveSources_defaultBehavior(t *testing.T) {
 	t.Parallel()
 	testcases := map[string]struct {
@@ -2601,6 +2600,7 @@ func TestAnalyze_directiveSources_defaultBehavior(t *testing.T) {
 	}
 }
 
+//nolint:funlen
 func TestAnalyze_forcedMap(t *testing.T) {
 	t.Parallel()
 	testcases := map[string]struct {

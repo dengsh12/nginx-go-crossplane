@@ -116,7 +116,7 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 	if knownDirective {
 		// Check if the directive has human-defined special definition
 		// If so, use it to do validation
-		bitmaskInForceMap, found := forced_map[directiveName]
+		bitmaskInForceMap, found := forcedMap[directiveName]
 		if found {
 			masks = bitmaskInForceMap
 		}
@@ -225,4 +225,6 @@ func unionBitmaskMaps(maps ...map[string][]uint) map[string][]uint {
 
 // A default map for directives, used when ParseOptions.DirectiveSources is
 // not provided. It is union of latest Nplus, Njs, and Otel
+//
+//nolint:gochecknoglobals
 var directives = unionBitmaskMaps(NgxPlusLatestDirectives, moduleNjsDirectives, moduleOtelDirectives)
