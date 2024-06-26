@@ -7,10 +7,12 @@
 
 package crossplane
 
-// A human editable map. Used to overwrite generated directive definitions for special cases.
+// A map used to overwrite generated directive definitions.
+// When we have a human-defined definition for a directive, which is different
+// from the definition in source code, put it here.
 //
 //nolint:gochecknoglobals
-var forcedMap = map[string][]uint{
+var priorityMap = map[string][]uint{
 	"if": {
 		ngxHTTPSrvConf | ngxHTTPLocConf | ngxConfBlock | ngxConfExpr | ngxConf1More,
 	},
