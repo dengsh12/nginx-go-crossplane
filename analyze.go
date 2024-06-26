@@ -116,9 +116,8 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 	if knownDirective {
 		// Check if the directive has human-defined special definition
 		// If so, use it to do validation
-		bitmaskInForceMap, found := forcedMap[directiveName]
-		if found {
-			masks = bitmaskInForceMap
+		if m, ok := forcedMap[directiveName]; ok {
+			masks = m
 		}
 	}
 
