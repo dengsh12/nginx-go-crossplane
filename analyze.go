@@ -115,9 +115,8 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 	}
 
 	if knownDirective {
-		bitmaskInForceMap, found := priorityMap[directiveName]
-		if found {
-			masks = bitmaskInForceMap
+		if m, found := priorityMap[directiveName]; found {
+			masks = m
 		}
 	}
 
