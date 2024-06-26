@@ -175,9 +175,14 @@ func GenerateMain(function string, moduleName string, onlyDocumentedDirs bool, s
 	}
 
 	if function == "generate" {
+		generator, found := module2generator[moduleName]
+		if !found {
+			fmt.Printf("source %s not found, please ensure there is a generator for it", moduleName)
+			return
+		}
 		fmt.Printf("generating for %s...", moduleName)
 		fmt.Println()
-		err := generate(moduleName)
+		err := generator.generateFromWeb()
 		if err != nil {
 			fmt.Printf("generation for %s failed, reason: %s", moduleName, err.Error())
 		} else {
