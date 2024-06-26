@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ossRepo         = "https://github.com/nginx/nginx.git"
-	ossVersionLimit = 3
+	ossRepo          = "https://github.com/nginx/nginx.git"
+	ossGenerateLimit = 3
 )
 
 const (

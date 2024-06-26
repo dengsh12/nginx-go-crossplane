@@ -59,10 +59,9 @@ func (generator *normalGenerator) generateFromWeb() error {
 	defer os.RemoveAll(tmpDir)
 
 	// Clone the repository
-
-	err = gitClone(tmpDir, repoURL, 1)
+	cmdOutput, err := gitClone(tmpDir, repoURL, 1)
 	if err != nil {
-		return err
+		return fmt.Errorf(cmdOutput)
 	}
 
 	projectRoot, err := getProjectRootAbsPath()
@@ -83,65 +82,35 @@ type ossGenerator struct {
 }
 
 func (generator *ossGenerator) generateFromWeb() error {
-	ossTmpDir := path.Join(tmpDirPattern, ossName)
-	if directoryExists(ossTmpDir) {
-		err := os.RemoveAll(ossTmpDir)
-		if err != nil {
-			return fmt.Errorf("removing %s failed, please remove this directory mannually", ossTmpDir)
+	repoURL := generator.repoURL
+
+	tmpDir, err := os.MkdirTemp("", tmpDirPattern)
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	err = gitClone(tmpDir, repoURL, 0)
+	if err != nil {
+		return err
+	}
+
+	branches, err := gitListRemoteBranch(tmpDir)
+	if err != nil {
+		return err
+	}
+
+	stableBranches := make([]string, 0)
+	for _, branch := range branches {
+		if strings.Contains(branch, "stable-") {
+			stableBranches = append(stableBranches, strings.TrimSpace(branch))
 		}
 	}
-	os.MkdirAll(ossTmpDir, 0777)
-	defer os.RemoveAll(tmpDirPattern)
 
-	repo, err := git.PlainClone(ossTmpDir, false, &git.CloneOptions{
-		URL:   generator.repoURL,
-		Depth: 1,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	// Fetch all remote branches
-	err = repo.Fetch(&git.FetchOptions{
-		RemoteName: "origin",
-		RefSpecs:   []config.RefSpec{"refs/heads/*:refs/remotes/origin/*"},
-	})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
-		return err
-	}
-
-	worktree, err := repo.Worktree()
-	if err != nil {
-		return err
-	}
-
-	// List all references and filter branches
-	refs, err := repo.References()
-	if err != nil {
-		return err
-	}
-
-	// Find all branches
-	allBranches := make([]string, 0)
-	err = refs.ForEach(func(ref *plumbing.Reference) error {
-		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
-			branchName := ref.Name().Short()
-			// Kick "master" and "default" out
-			if strings.Contains(branchName, "-") {
-				allBranches = append(allBranches, branchName)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	// Only supports several latest stable version
-	sort.Slice(allBranches, func(i, j int) bool {
-		iVersionStr := strings.Split(allBranches[i], "-")[1]
-		jVersionStr := strings.Split(allBranches[j], "-")[1]
+	// sort the stable branches according to their versions
+	sort.Slice(stableBranches, func(i, j int) bool {
+		iVersionStr := strings.Split(stableBranches[i], "-")[1]
+		jVersionStr := strings.Split(stableBranches[j], "-")[1]
 		iVerSplit := strings.Split(iVersionStr, ".")
 		jVerSplit := strings.Split(jVersionStr, ".")
 		iVerIntPart, _ := strconv.Atoi(iVerSplit[0])
@@ -153,21 +122,19 @@ func (generator *ossGenerator) generateFromWeb() error {
 		}
 		return iVerIntPart > jVerIntPart
 	})
-	wantedBranches := make(map[string]interface{}, 0)
-	wantedBranches["origin/master"] = nil
-	for idx, branch := range allBranches {
-		if idx >= ossVersionLimit-1 {
-			break
-		}
-		wantedBranches[branch] = nil
+
+	wantedBranches := []string{
+		"master",
 	}
 
-	// Generate support files
-	refs, err = repo.References()
-	if err != nil {
-		return err
+	// only pick latest several versions
+	for idx, branch := range stableBranches {
+		if idx >= ossGenerateLimit-1 {
+			break
+		}
+		wantedBranches = append(wantedBranches, branch)
 	}
-	matchFnList := make([]string, 0)
+
 	projectRoot, err := getProjectRootAbsPath()
 	if err != nil {
 		return err
@@ -177,34 +144,25 @@ func (generator *ossGenerator) generateFromWeb() error {
 		return err
 	}
 
-	err = refs.ForEach(func(ref *plumbing.Reference) error {
-		if ref.Name().IsRemote() && strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/") {
-			branchName := ref.Name().Short()
-			if _, found := wantedBranches[branchName]; found {
-				err := worktree.Checkout(&git.CheckoutOptions{
-					Branch: ref.Name(),
-				})
-				if err != nil {
-					return err
-				}
-				ossVerStr := ""
-				if strings.Contains(branchName, "master") {
-					ossVerStr = "Latest"
-				} else {
-					ossVerStr = strings.Split(branchName, "-")[1]
-					ossVerStr = strings.Join(strings.Split(ossVerStr, "."), "")
-				}
-				matchFnName := fmt.Sprintf("Oss%sDirectivesMatchFn", ossVerStr)
-				fileName := fmt.Sprintf("./analyze_oss_%s_directives.go", lowercaseStrFirstChar(ossVerStr))
-				generateSupportFileFromCode(ossTmpDir, ossName, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName), filter)
-				matchFnList = append(matchFnList, matchFnName)
-			}
+	// generate codes
+	for _, branch := range wantedBranches {
+		branch = strings.Replace(branch, "origin/", "", -1)
+		cmdOutput, err := gitCheckout(tmpDir, branch)
+		if err != nil {
+			return fmt.Errorf(cmdOutput)
 		}
-		return nil
-	})
-	if err != nil {
-		return err
+		var ossVerStr string
+		if strings.Contains(branch, "master") {
+			ossVerStr = "Latest"
+		} else {
+			ossVerStr = strings.Split(branch, "-")[1]
+			ossVerStr = strings.Join(strings.Split(ossVerStr, "."), "")
+		}
+		matchFnName := fmt.Sprintf("Oss%sDirectivesMatchFn", ossVerStr)
+		fileName := fmt.Sprintf("./analyze_oss_%s_directives.go", lowercaseStrFirstChar(ossVerStr))
+		generateSupportFileFromCode(tmpDir, ossName, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName), filter)
 	}
+
 	return nil
 }
 
@@ -286,7 +244,7 @@ func generateOSS() error {
 	wantedBranches := make(map[string]interface{}, 0)
 	wantedBranches["origin/master"] = nil
 	for idx, branch := range allBranches {
-		if idx >= ossVersionLimit-1 {
+		if idx >= ossGenerateLimit-1 {
 			break
 		}
 		wantedBranches[branch] = nil
