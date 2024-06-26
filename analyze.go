@@ -225,4 +225,4 @@ func unionBitmaskMaps(maps ...map[string][]uint) map[string][]uint {
 // not provided. It is union of latest Nplus, Njs, and Otel
 //
 //nolint:gochecknoglobals
-var directives = unionBitmaskMaps(NgxPlusLatestDirectives, moduleNjsDirectives, moduleOtelDirectives)
+var directives = unionBitmaskMaps(ngxPlusLatestDirectives, moduleNjsDirectives, moduleOtelDirectives)
