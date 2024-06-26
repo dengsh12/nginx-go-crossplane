@@ -27,6 +27,6 @@ func main() {
 		onlyDocumentedDirs = flag.Bool("documented_only", false, "only output consider directives on https://nginx.org/en/docs/dirindex.html, optional, false by default")
 	)
 	flag.Parse()
-	generator.GenerateMain(*function, *moduleName, *onlyDocumentedDirs, *sourceCodePath, *outputFolder)
+	generator.Generate(*function, *moduleName, *onlyDocumentedDirs, *sourceCodePath, *outputFolder)
 	fmt.Println("use time:" + time.Since(start_t).String())
 }

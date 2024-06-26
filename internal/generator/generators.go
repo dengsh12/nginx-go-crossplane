@@ -22,7 +22,7 @@ type normalGenerator struct {
 	repoURL    string
 }
 
-var module2generator = map[string]codeGenerator{
+var source2generator = map[string]codeGenerator{
 	"lua": &normalGenerator{
 		sourceName: "lua",
 		repoURL:    "https://github.com/openresty/lua-nginx-module.git",
@@ -48,21 +48,20 @@ func (generator *normalGenerator) generateFromWeb() error {
 	sourceName := generator.sourceName
 	repoURL := generator.repoURL
 
-	moduleTmpDir := path.Join(tmpRootDir, sourceName)
-	if directoryExists(moduleTmpDir) {
-		err := os.RemoveAll(moduleTmpDir)
-		if err != nil {
-			return fmt.Errorf("removing %s failed, please remove this directory mannually", moduleTmpDir)
-		}
+	repoURL, found := module2git[sourceName]
+	if !found {
+		return fmt.Errorf("can't find git repo for module {%s}, make sure it is in the module2git map (in ./scripts/generator_script.go)", moduleName)
 	}
-	defer os.RemoveAll(tmpRootDir)
 
-	err := os.MkdirAll(moduleTmpDir, 0777)
+	tmpDir, err := os.MkdirTemp("", tmpDirPattern)
 	if err != nil {
 		return err
 	}
+	defer os.RemoveAll(tmpDir)
+
 	// Clone the repository
-	_, err = git.PlainClone(moduleTmpDir, false, &git.CloneOptions{
+
+	_, err = git.PlainClone(tmpDir, false, &git.CloneOptions{
 		URL:      repoURL,
 		Progress: nil,
 		Depth:    1,
@@ -77,7 +76,7 @@ func (generator *normalGenerator) generateFromWeb() error {
 		return err
 	}
 
-	err = generateSupportFileFromCode(moduleTmpDir, sourceName, getModuleMapName(sourceName), getModuleMatchFnName(sourceName), path.Join(projectRoot, getModuleFileName(sourceName)), nil)
+	err = generateSupportFileFromCode(tmpDir, sourceName, getModuleMapName(sourceName), getModuleMatchFnName(sourceName), path.Join(projectRoot, getModuleFileName(sourceName)), nil)
 	if err != nil {
 		return err
 	}
@@ -90,7 +89,7 @@ type ossGenerator struct {
 }
 
 func (generator *ossGenerator) generateFromWeb() error {
-	ossTmpDir := path.Join(tmpRootDir, ossName)
+	ossTmpDir := path.Join(tmpDirPattern, ossName)
 	if directoryExists(ossTmpDir) {
 		err := os.RemoveAll(ossTmpDir)
 		if err != nil {
@@ -98,7 +97,7 @@ func (generator *ossGenerator) generateFromWeb() error {
 		}
 	}
 	os.MkdirAll(ossTmpDir, 0777)
-	defer os.RemoveAll(tmpRootDir)
+	defer os.RemoveAll(tmpDirPattern)
 
 	repo, err := git.PlainClone(ossTmpDir, false, &git.CloneOptions{
 		URL:   generator.repoURL,
@@ -220,7 +219,7 @@ var module2genFunc = map[string]func() error{
 }
 
 func generateOSS() error {
-	ossTmpDir := path.Join(tmpRootDir, ossName)
+	ossTmpDir := path.Join(tmpDirPattern, ossName)
 	if directoryExists(ossTmpDir) {
 		err := os.RemoveAll(ossTmpDir)
 		if err != nil {
@@ -228,7 +227,7 @@ func generateOSS() error {
 		}
 	}
 	os.MkdirAll(ossTmpDir, 0777)
-	defer os.RemoveAll(tmpRootDir)
+	defer os.RemoveAll(tmpDirPattern)
 
 	repo, err := git.PlainClone(ossTmpDir, false, &git.CloneOptions{
 		URL:   ossRepo,
