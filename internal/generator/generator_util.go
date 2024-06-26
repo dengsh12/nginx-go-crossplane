@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -476,8 +477,8 @@ func fetchDocumentedDirctives() (map[string]interface{}, error) {
 	return documentedDirectives, nil
 }
 
-func gitClone(dir string, repoURL string) error {
-	comm := exec.Command("git", "clone", repoURL)
+func gitClone(dir string, repoURL string, depth int) error {
+	comm := exec.Command("git", "clone", "--depth", strconv.Itoa(depth), repoURL)
 	comm.Dir = dir
 	err := comm.Run()
 	return err
