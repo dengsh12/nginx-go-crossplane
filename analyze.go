@@ -108,13 +108,14 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 		}
 	}
 
-	// If DirectiveSources was not provided, use the defaul map
+	// If DirectiveSources was not provided, use the default map
 	if len(options.DirectiveSources) == 0 {
 		masks, knownDirective = directives[directiveName]
 	}
 
 	if knownDirective {
-		// check if the directive has human-defined special definition
+		// Check if the directive has human-defined special definition
+		// If so, use it to do validation
 		bitmaskInForceMap, found := forced_map[directiveName]
 		if found {
 			masks = bitmaskInForceMap

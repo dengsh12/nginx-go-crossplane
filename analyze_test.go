@@ -2608,7 +2608,7 @@ func TestAnalyze_forcedMap(t *testing.T) {
 		ctx     blockCtx
 		wantErr bool
 	}{
-		// If a directive was defined in forcedMap, the definition
+		// If a directive was defined in both forcedMap and DirectiveSources, the definition
 		// provided in Directivesources will be overwrite
 		"DirectiveInDirectiveSourcesAndForcedMap_pass": {
 			&Directive{
@@ -2628,7 +2628,7 @@ func TestAnalyze_forcedMap(t *testing.T) {
 			blockCtx{"http", "location"},
 			true,
 		},
-		// If a directive was defined in forcedMap, the definition
+		// If a directive was defined in both forcedMap and default map, the definition
 		// provided in default map will be overwrite
 		"DirectiveInDefaultMapAndForcedMap_pass": {
 			&Directive{
