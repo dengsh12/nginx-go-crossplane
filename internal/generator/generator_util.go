@@ -477,9 +477,31 @@ func fetchDocumentedDirctives() (map[string]interface{}, error) {
 	return documentedDirectives, nil
 }
 
-func gitClone(dir string, repoURL string, depth int) error {
-	comm := exec.Command("git", "clone", "--depth", strconv.Itoa(depth), repoURL)
+func gitClone(dir string, repoURL string, depth int) (string, error) {
+	var comm *exec.Cmd
+	if depth <= 0 {
+		comm = exec.Command("git", "clone", repoURL, ".")
+	} else {
+		comm = exec.Command("git", "clone", "--depth", strconv.Itoa(depth), repoURL, ".")
+	}
 	comm.Dir = dir
-	err := comm.Run()
-	return err
+	output, err := comm.CombinedOutput()
+	// err here is very vague, while the cmd output is clear for this purpose
+	return string(output), err
+}
+
+func gitListRemoteBranch(dir string) ([]string, error) {
+	lineSep := getLineSeperator()
+	comm := exec.Command("git", "branch", "-r")
+	comm.Dir = dir
+	byteOutput, err := comm.Output()
+	output := string(byteOutput)
+	return strings.Split(output, lineSep), err
+}
+
+func gitCheckout(dir string, branch string) (string, error) {
+	comm := exec.Command("git", "checkout", branch)
+	comm.Dir = dir
+	output, err := comm.CombinedOutput()
+	return string(output), err
 }
