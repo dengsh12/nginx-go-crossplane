@@ -12,7 +12,7 @@ import (
 const (
 	ossRepo         = "https://github.com/nginx/nginx.git"
 	ossVersionLimit = 3
-	tmpRootDir      = "./generator_tmp"
+	tmpDirPattern   = "./generator_tmp_"
 )
 
 const (
@@ -110,21 +110,14 @@ func generateModuleFromWeb(moduleName string) error {
 		return fmt.Errorf("can't find git repo for module {%s}, make sure it is in the module2git map (in ./scripts/generator_script.go)", moduleName)
 	}
 
-	moduleTmpDir := path.Join(tmpRootDir, moduleName)
-	if directoryExists(moduleTmpDir) {
-		err := os.RemoveAll(moduleTmpDir)
-		if err != nil {
-			return fmt.Errorf("removing %s failed, please remove this directory mannually", moduleTmpDir)
-		}
-	}
-	defer os.RemoveAll(tmpRootDir)
-
-	err := os.MkdirAll(moduleTmpDir, 0777)
+	tmpDir, err := os.MkdirTemp("", tmpDirPattern)
 	if err != nil {
 		return err
 	}
+	defer os.RemoveAll(tmpDir)
+
 	// Clone the repository
-	_, err = git.PlainClone(moduleTmpDir, false, &git.CloneOptions{
+	_, err = git.PlainClone(tmpDir, false, &git.CloneOptions{
 		URL:      repoURL,
 		Progress: nil,
 		Depth:    1,
@@ -139,7 +132,7 @@ func generateModuleFromWeb(moduleName string) error {
 		return err
 	}
 
-	err = generateSupportFileFromCode(moduleTmpDir, moduleName, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)), nil)
+	err = generateSupportFileFromCode(tmpDir, moduleName, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)), nil)
 	if err != nil {
 		return err
 	}
@@ -147,15 +140,7 @@ func generateModuleFromWeb(moduleName string) error {
 	return nil
 }
 
-func generate(moduleName string) error {
-	genFunc, found := module2genFunc[moduleName]
-	if found {
-		return genFunc()
-	}
-	return generateModuleFromWeb(moduleName)
-}
-
-func GenerateMain(function string, moduleName string, onlyDocumentedDirs bool, sourceCodePath string, outputFolder string) {
+func Generate(function string, moduleName string, onlyDocumentedDirs bool, sourceCodePath string, outputFolder string) {
 	validFunctions := []string{"code2map", "code2json", "json2map", "generate"}
 	isValidFunc := false
 	for _, funcName := range validFunctions {
@@ -175,7 +160,7 @@ func GenerateMain(function string, moduleName string, onlyDocumentedDirs bool, s
 	}
 
 	if function == "generate" {
-		generator, found := module2generator[moduleName]
+		generator, found := source2generator[moduleName]
 		if !found {
 			fmt.Printf("source %s not found, please ensure there is a generator for it", moduleName)
 			return

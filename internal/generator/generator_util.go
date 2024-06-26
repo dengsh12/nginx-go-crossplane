@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -473,4 +474,11 @@ func fetchDocumentedDirctives() (map[string]interface{}, error) {
 	})
 
 	return documentedDirectives, nil
+}
+
+func gitClone(dir string, repoURL string) error {
+	comm := exec.Command("git", "clone", repoURL)
+	comm.Dir = dir
+	err := comm.Run()
+	return err
 }
