@@ -228,7 +228,7 @@ func getLineSeperator() string {
 	return "\n"
 }
 
-func generateSupportFileFromCode(codePath string, moduleName string, mapVariableName string, mathFnName string, outputFilePath string, filter map[string]interface{}) error {
+func generateSupportFileFromCode(codePath string, sourceName string, mapVariableName string, mathFnName string, outputFilePath string, filter map[string]interface{}) error {
 	directiveMap, err := extractDirectiveMapFromFolder(codePath)
 	if err != nil {
 		return err
@@ -246,7 +246,7 @@ func generateSupportFileFromCode(codePath string, moduleName string, mapVariable
 		}
 	}
 
-	postProcFn, found := module2postProcFns[moduleName]
+	postProcFn, found := source2postProcFns[sourceName]
 	if found {
 		err = postProcFn(directiveMap)
 		if err != nil {
@@ -347,12 +347,12 @@ func generateSupportFileFromCode(codePath string, moduleName string, mapVariable
 	return nil
 }
 
-func uppercaseStrFirstChar(moduleName string) string {
-	moduleNameRunes := []rune(moduleName)
-	if moduleNameRunes[0] >= 'a' && moduleNameRunes[0] <= 'z' {
-		moduleNameRunes[0] += 'A' - 'a'
+func uppercaseStrFirstChar(str string) string {
+	strRunes := []rune(str)
+	if strRunes[0] >= 'a' && strRunes[0] <= 'z' {
+		strRunes[0] += 'A' - 'a'
 	}
-	return string(moduleNameRunes)
+	return string(strRunes)
 }
 
 func lowercaseStrFirstChar(str string) string {
@@ -378,6 +378,7 @@ func getModuleFileName(moduleName string) string {
 	return fmt.Sprintf("analyze_%s_directives.go", moduleName)
 }
 
+// todo: delete it
 func directoryExists(path string) bool {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -486,7 +487,6 @@ func gitClone(dir string, repoURL string, depth int) (string, error) {
 	}
 	comm.Dir = dir
 	output, err := comm.CombinedOutput()
-	// err here is very vague, while the cmd output is clear for this purpose
 	return string(output), err
 }
 

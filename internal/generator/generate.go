@@ -14,6 +14,7 @@ const (
 	ossGenerateLimit = 3
 )
 
+// todo: delete it
 const (
 	luaModuleName          = "lua"
 	heardersMoreModuleName = "headersMore"
@@ -23,6 +24,7 @@ const (
 	nPlusName              = "NPLUS"
 )
 
+// todo: delete it
 var module2git = map[string]string{
 	heardersMoreModuleName: "https://github.com/openresty/headers-more-nginx-module.git",
 	luaModuleName:          "https://github.com/openresty/lua-nginx-module.git",
@@ -103,6 +105,7 @@ func testRun() {
 	// compare2directiveMapWithMatchFn(crossplane.AppProtectWAFv5Directives, crossplane.AppProtectWAFv5DirectivesMatchFn)
 }
 
+// todo:delete it
 func generateModuleFromWeb(moduleName string) error {
 	repoURL, found := module2git[moduleName]
 	if !found {
@@ -139,7 +142,7 @@ func generateModuleFromWeb(moduleName string) error {
 	return nil
 }
 
-func Generate(function string, moduleName string, onlyDocumentedDirs bool, sourceCodePath string, outputFolder string) {
+func Generate(function string, sourceName string, onlyDocumentedDirs bool, sourceCodePath string, outputFolder string) {
 	validFunctions := []string{"code2map", "code2json", "json2map", "generate"}
 	isValidFunc := false
 	for _, funcName := range validFunctions {
@@ -159,18 +162,18 @@ func Generate(function string, moduleName string, onlyDocumentedDirs bool, sourc
 	}
 
 	if function == "generate" {
-		generator, found := source2generator[moduleName]
+		generator, found := source2generator[sourceName]
 		if !found {
-			fmt.Printf("source %s not found, please ensure there is a generator for it", moduleName)
+			fmt.Printf("source %s not found, please ensure there is a generator for it", sourceName)
 			return
 		}
-		fmt.Printf("generating for %s...", moduleName)
+		fmt.Printf("generating for %s...", sourceName)
 		fmt.Println()
 		err := generator.generateFromWeb()
 		if err != nil {
-			fmt.Printf("generation for %s failed, reason: %s", moduleName, err.Error())
+			fmt.Printf("generation for %s failed, reason: %s", sourceName, err.Error())
 		} else {
-			fmt.Printf("generation for %s success", moduleName)
+			fmt.Printf("generation for %s success", sourceName)
 		}
 		fmt.Println()
 	} else if function == "code2map" {
@@ -178,7 +181,7 @@ func Generate(function string, moduleName string, onlyDocumentedDirs bool, sourc
 			fmt.Println("Please provide the path of the source code folder, -h or --help for help")
 			return
 		}
-		if moduleName == "" {
+		if sourceName == "" {
 			fmt.Println("Please provide the module name, -h or --help for help")
 			return
 		}
@@ -190,7 +193,7 @@ func Generate(function string, moduleName string, onlyDocumentedDirs bool, sourc
 				fmt.Println(err)
 			}
 		}
-		err = generateSupportFileFromCode(sourceCodePath, moduleName, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(outputFolder, getModuleFileName(moduleName)), filter)
+		err = generateSupportFileFromCode(sourceCodePath, sourceName, getModuleMapName(sourceName), getModuleMatchFnName(sourceName), path.Join(outputFolder, getModuleFileName(sourceName)), filter)
 		if err != nil {
 			fmt.Println("Generate failed, error:")
 			fmt.Println(err.Error())

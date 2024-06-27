@@ -2,7 +2,7 @@ package generator
 
 import "fmt"
 
-var module2postProcFns = map[string]func(map[string][][]string) error{
+var source2postProcFns = map[string]func(map[string][][]string) error{
 	luaModuleName: postProcLuaMap,
 }
 

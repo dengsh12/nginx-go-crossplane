@@ -61,7 +61,8 @@ func (generator *normalGenerator) generateFromWeb() error {
 	// Clone the repository
 	cmdOutput, err := gitClone(tmpDir, repoURL, 1)
 	if err != nil {
-		return fmt.Errorf(cmdOutput)
+		fmt.Println("git clone fail, cmd output:" + cmdOutput)
+		return err
 	}
 
 	projectRoot, err := getProjectRootAbsPath()
@@ -90,13 +91,15 @@ func (generator *ossGenerator) generateFromWeb() error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	err = gitClone(tmpDir, repoURL, 0)
+	cmdOutput, err := gitClone(tmpDir, repoURL, 0)
 	if err != nil {
+		fmt.Println("git clone failed, cmd output: " + cmdOutput)
 		return err
 	}
 
 	branches, err := gitListRemoteBranch(tmpDir)
 	if err != nil {
+		fmt.Println("git branch -r failed, cmd output: " + branches[0])
 		return err
 	}
 
@@ -149,6 +152,7 @@ func (generator *ossGenerator) generateFromWeb() error {
 		branch = strings.Replace(branch, "origin/", "", -1)
 		cmdOutput, err := gitCheckout(tmpDir, branch)
 		if err != nil {
+			fmt.Println("git checkout failed, cmd output: " + cmdOutput)
 			return fmt.Errorf(cmdOutput)
 		}
 		var ossVerStr string
@@ -166,10 +170,12 @@ func (generator *ossGenerator) generateFromWeb() error {
 	return nil
 }
 
+// todo: delete it
 var module2genFunc = map[string]func() error{
 	ossName: generateOSS,
 }
 
+// todo: delete it
 func generateOSS() error {
 	ossTmpDir := path.Join(tmpDirPattern, ossName)
 	if directoryExists(ossTmpDir) {
