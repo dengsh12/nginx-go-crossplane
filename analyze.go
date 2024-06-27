@@ -115,7 +115,7 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 	}
 
 	if knownDirective {
-		if m, found := priorityMap[directiveName]; found {
+		if m, found := directiveOverrides[directiveName]; found {
 			masks = m
 		}
 	}
