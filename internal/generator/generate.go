@@ -2,35 +2,14 @@ package generator
 
 import (
 	"fmt"
-	"os"
 	"path"
 	"sort"
-
-	"github.com/go-git/go-git/v5"
 )
 
 const (
 	ossRepo          = "https://github.com/nginx/nginx.git"
 	ossGenerateLimit = 3
 )
-
-// todo: delete it
-const (
-	luaModuleName          = "lua"
-	heardersMoreModuleName = "headersMore"
-	njsModuleName          = "njs"
-	otelModuleName         = "otel"
-	ossName                = "OSS"
-	nPlusName              = "NPLUS"
-)
-
-// todo: delete it
-var module2git = map[string]string{
-	heardersMoreModuleName: "https://github.com/openresty/headers-more-nginx-module.git",
-	luaModuleName:          "https://github.com/openresty/lua-nginx-module.git",
-	njsModuleName:          "https://github.com/nginx/njs.git",
-	otelModuleName:         "https://github.com/nginxinc/nginx-otel.git",
-}
 
 // todo: delete it
 func compare2directiveMap(correct map[string][]uint, generated map[string][]uint) {
@@ -103,43 +82,6 @@ func compare2directiveMapWithMatchFn(correct map[string][]uint, matchFn func(dir
 // todo: delete it
 func testRun() {
 	// compare2directiveMapWithMatchFn(crossplane.AppProtectWAFv5Directives, crossplane.AppProtectWAFv5DirectivesMatchFn)
-}
-
-// todo:delete it
-func generateModuleFromWeb(moduleName string) error {
-	repoURL, found := module2git[moduleName]
-	if !found {
-		return fmt.Errorf("can't find git repo for module {%s}, make sure it is in the module2git map (in ./scripts/generator_script.go)", moduleName)
-	}
-
-	tmpDir, err := os.MkdirTemp("", tmpDirPattern)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Clone the repository
-	_, err = git.PlainClone(tmpDir, false, &git.CloneOptions{
-		URL:      repoURL,
-		Progress: nil,
-		Depth:    1,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	projectRoot, err := getProjectRootAbsPath()
-	if err != nil {
-		return err
-	}
-
-	err = generateSupportFileFromCode(tmpDir, moduleName, getModuleMapName(moduleName), getModuleMatchFnName(moduleName), path.Join(projectRoot, getModuleFileName(moduleName)), nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func Generate(function string, sourceName string, onlyDocumentedDirs bool, sourceCodePath string, outputFolder string) {
