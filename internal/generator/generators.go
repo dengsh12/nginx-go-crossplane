@@ -161,7 +161,7 @@ func (generator *ossGenerator) generateFromWeb() error {
 		}
 		matchFnName := fmt.Sprintf("Oss%sDirectivesMatchFn", ossVerStr)
 		fileName := fmt.Sprintf("./analyze_oss_%s_directives.go", lowercaseStrFirstChar(ossVerStr))
-		generateSupportFileFromCode(tmpDir, ossName, fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName), filter)
+		generateSupportFileFromCode(tmpDir, "OSS", fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName), filter)
 	}
 
 	return nil

@@ -3,7 +3,8 @@ package generator
 import "fmt"
 
 var source2postProcFns = map[string]func(map[string][][]string) error{
-	luaModuleName: postProcLuaMap,
+	"lua": postProcLuaMap,
+	"OSS": postProcOssMap,
 }
 
 var argsNumBitmasks = []string{
@@ -43,6 +44,17 @@ func postProcLuaMap(directivesMap map[string][][]string) error {
 						}
 					}
 				}
+			}
+		}
+	}
+	return nil
+}
+
+func postProcOssMap(directivesMap map[string][][]string) error {
+	for directive, _ := range directivesMap {
+		if directive == "if" {
+			directivesMap[directive] = [][]string{
+				{"ngxHTTPSrvConf", "ngxHTTPLocConf", "ngxConfBlock", "ngxConfExpr", "ngxConf1More"},
 			}
 		}
 	}
