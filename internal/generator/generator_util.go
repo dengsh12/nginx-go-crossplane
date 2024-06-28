@@ -1,7 +1,9 @@
 package generator
 
 import (
+	_ "embed"
 	"fmt"
+	"html/template"
 	"io/fs"
 	"net/http"
 	"os"
@@ -9,13 +11,24 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
+type source string
+
+const (
+	oSS       source = "OSS"
+	lua       source = "lua"
+	otel      source = "otel"
+	nPlus     source = "NPlus"
+	headsMore source = "headersMore"
+	njs       source = "njs"
+)
+
+// regex
 const (
 	// Extract single directive definition block
 	// static ngx_command_t  {name}[] = {definition}
@@ -31,6 +44,21 @@ const (
 	extractMultiLineComment   = `/\*[\s\S]*?\*/`
 	ngxMatchFnListFile        = "./ngx_matchFn_list.go"
 )
+
+type bitDef []string
+
+type supFileTmplStruct struct {
+	SourceName        string
+	Directive2bitDefs map[string][]bitDef
+	MapVariableName   string
+	MatchFnName       string
+}
+
+//go:embed tmpl/support_file.tmpl
+var supFileTmplStr string
+
+var supFileTmpl = template.Must(template.New("supFile").
+	Funcs(template.FuncMap{"Join": strings.Join}).Parse(supFileTmplStr))
 
 // todo: delete this
 var specialBitmaskNameMatch = map[string]string{
@@ -96,10 +124,9 @@ var directiveBlock2Context = map[string]string{
 	"ngx_mgmt_block_commands": "ngxMgmtMainConf",
 }
 
-// Extract directives from a source code through regex. Key of the return map is directive name
-// value of it is its bitmasks in string
-func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, error) {
-	directiveMap := make(map[string][][]string, 0)
+// Extract directives definitions from source code through regex
+func extractDirectiveDefFromFolder(rootPath string) (map[string][]bitDef, error) {
+	directive2Defs := make(map[string][]bitDef, 0)
 	directivesDefBlockExtracter := regexp.MustCompile(extractNgxDirectiveArray)
 	singleDirectiveExtracter := regexp.MustCompile(extractNgxSingleDirective)
 	singleLineCommentExtracter := regexp.MustCompile(extractSingleLineComment)
@@ -138,15 +165,15 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 				for _, attributes := range attributesList {
 					// Extract attributes from the directive
 					directiveName := strings.TrimSpace(attributes[1])
-					diretiveBitmaskNames := strings.Split(attributes[2], "|")
+					diretiveBitmasks := strings.Split(attributes[2], "|")
 					haveContext := false
 
-					for idx, bitmaskName := range diretiveBitmaskNames {
+					for idx, bitmaskName := range diretiveBitmasks {
 						bitmaskGoName, found := ngxBitmaskNameToGo[strings.TrimSpace(bitmaskName)]
 						if !found {
 							return fmt.Errorf("parsing directive %s, bitmask %s in source code not found in crossplane", directiveName, bitmaskName)
 						}
-						diretiveBitmaskNames[idx] = bitmaskGoName
+						diretiveBitmasks[idx] = bitmaskGoName
 						if _, found := allDirectiveContexts[bitmaskGoName]; found {
 							haveContext = true
 						}
@@ -157,15 +184,15 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 					if !haveContext {
 						context, found := directiveBlock2Context[directiveBlockName]
 						if found {
-							diretiveBitmaskNames = append(diretiveBitmaskNames, context)
+							diretiveBitmasks = append(diretiveBitmasks, context)
 						}
 					}
 
-					if bitmaskNamesList, exist := directiveMap[directiveName]; exist {
-						bitmaskNamesList = append(bitmaskNamesList, diretiveBitmaskNames)
-						directiveMap[directiveName] = bitmaskNamesList
+					if bitmaskDefList, exist := directive2Defs[directiveName]; exist {
+						bitmaskDefList = append(bitmaskDefList, diretiveBitmasks)
+						directive2Defs[directiveName] = bitmaskDefList
 					} else {
-						directiveMap[directiveName] = [][]string{diretiveBitmaskNames}
+						directive2Defs[directiveName] = []bitDef{diretiveBitmasks}
 					}
 				}
 			}
@@ -178,11 +205,11 @@ func extractDirectiveMapFromFolder(rootPath string) (map[string][][]string, erro
 		return nil, err
 	}
 
-	if len(directiveMap) == 0 {
+	if len(directive2Defs) == 0 {
 		return nil, fmt.Errorf("can't find any directives in the directory and subdirectories, please check the path")
 	}
 
-	return directiveMap, nil
+	return directive2Defs, nil
 }
 
 // Change the C style const name to Go style. An example is
@@ -228,26 +255,26 @@ func getLineSeperator() string {
 }
 
 func generateSupportFileFromCode(codePath string, sourceName string, mapVariableName string, mathFnName string, outputFilePath string, filter map[string]interface{}) error {
-	directiveMap, err := extractDirectiveMapFromFolder(codePath)
+	directive2BitDefs, err := extractDirectiveDefFromFolder(codePath)
 	if err != nil {
 		return err
 	}
 
 	if filter != nil {
 		directivesToDelete := []string{}
-		for directve, _ := range directiveMap {
+		for directve, _ := range directive2BitDefs {
 			if _, found := filter[directve]; !found {
 				directivesToDelete = append(directivesToDelete, directve)
 			}
 		}
 		for _, directive := range directivesToDelete {
-			delete(directiveMap, directive)
+			delete(directive2BitDefs, directive)
 		}
 	}
 
 	postProcFn, found := source2postProcFns[sourceName]
 	if found {
-		err = postProcFn(directiveMap)
+		err = postProcFn(directive2BitDefs)
 		if err != nil {
 			return err
 		}
@@ -264,84 +291,16 @@ func generateSupportFileFromCode(codePath string, sourceName string, mapVariable
 		return err
 	}
 
-	// Annotations
-	lineSeperator := getLineSeperator()
-	contents := make([]string, 0)
-	contents = append(contents, "/**")
-	contents = append(contents, " * Copyright (c) F5, Inc.")
-	contents = append(contents, " *")
-	contents = append(contents, " * This source code is licensed under the Apache License, Version 2.0 license found in the")
-	contents = append(contents, " * LICENSE file in the root directory of this source tree.")
-	contents = append(contents, " */")
-	contents = append(contents, "")
-	// contents = append(contents, "// Code generated by generator; DO NOT EDIT.")
-	// contents = append(contents, "// If you want to overwrite any directive's definition, please modify directive_overrides.go")
-	contents = append(contents, "// All the definitions are extracted from the source code")
-	contents = append(contents, "// Each bit mask describes these behaviors:")
-	contents = append(contents, "//   - how many arguments the directive can take")
-	contents = append(contents, "//   - whether or not it is a block directive")
-	contents = append(contents, "//   - whether this is a flag (takes one argument that's either \"on\" or \"off\")")
-	contents = append(contents, "//   - which contexts it's allowed to be in")
-	contents = append(contents, "")
-
-	// Package definition
-	contents = append(contents, "package crossplane")
-	contents = append(contents, "")
-
-	contents = append(contents, "//nolint:gochecknoglobals")
-	contents = append(contents, fmt.Sprintf("var %s = map[string][]uint{", mapVariableName))
-
-	// Sort the directive names, just for easier search and stable output
-	directiveNames := make([]string, 0, len(directiveMap))
-	for name := range directiveMap {
-		directiveNames = append(directiveNames, name)
+	err = supFileTmpl.Execute(file, supFileTmplStruct{
+		SourceName:        sourceName,
+		Directive2bitDefs: directive2BitDefs,
+		MapVariableName:   mapVariableName,
+		MatchFnName:       mathFnName,
+	})
+	if err != nil {
+		return err
 	}
-	sort.Strings(directiveNames)
 
-	// Generate directives map
-	for _, name := range directiveNames {
-		contents = append(contents, fmt.Sprintf("\t\"%s\": {", name))
-		bitmaskNamesList := directiveMap[name]
-
-		for _, bitmaskNames := range bitmaskNamesList {
-			bitmaskNameNum := len(bitmaskNames)
-			var builder strings.Builder
-			builder.WriteString("\t\t")
-			for idx, bitmaskName := range bitmaskNames {
-				if idx > 0 {
-					builder.WriteString("| ")
-				}
-				builder.WriteString(bitmaskName)
-				if idx < bitmaskNameNum-1 {
-					builder.WriteString(" ")
-				} else {
-					builder.WriteString(",")
-				}
-			}
-			contents = append(contents, builder.String())
-		}
-
-		contents = append(contents, "\t},")
-	}
-	contents = append(contents, "}")
-
-	// Generate MatchFn
-	contents = append(contents, "")
-	contents = append(contents, fmt.Sprintf("func %s(directive string) ([]uint, bool) {", mathFnName))
-	contents = append(contents, fmt.Sprintf("\tmasks, matched := %s[directive]", mapVariableName))
-	contents = append(contents, "\treturn masks, matched")
-	contents = append(contents, "}")
-
-	for _, line := range contents {
-		_, err := file.WriteString(line)
-		if err != nil {
-			return err
-		}
-		_, err = file.WriteString(lineSeperator)
-		if err != nil {
-			return err
-		}
-	}
 	file.Close()
 	return nil
 }

@@ -2,9 +2,10 @@ package generator
 
 import "fmt"
 
-var source2postProcFns = map[string]func(map[string][][]string) error{
-	"lua": postProcLuaMap,
-	"OSS": postProcOssMap,
+var source2postProcFns = map[string]func(map[string][]bitDef) error{
+	"lua":   postProcLuaMap,
+	"OSS":   postProcNgxNativeMap,
+	"NPlus": postProcNgxNativeMap,
 }
 
 var argsNumBitmasks = []string{
@@ -20,7 +21,7 @@ var argsNumBitmasks = []string{
 
 // For lua module, we remove ngxConfBlock and add args num by 1
 // See PR: https://github.com/nginxinc/nginx-go-crossplane/pull/86
-func postProcLuaMap(directivesMap map[string][][]string) error {
+func postProcLuaMap(directivesMap map[string][]bitDef) error {
 	for directive, bitmaskNamesList := range directivesMap {
 		for dirIdx, bitmaskNames := range bitmaskNamesList {
 			isBlock := false
@@ -50,10 +51,10 @@ func postProcLuaMap(directivesMap map[string][][]string) error {
 	return nil
 }
 
-func postProcOssMap(directivesMap map[string][][]string) error {
+func postProcNgxNativeMap(directivesMap map[string][]bitDef) error {
 	for directive, _ := range directivesMap {
 		if directive == "if" {
-			directivesMap[directive] = [][]string{
+			directivesMap[directive] = []bitDef{
 				{"ngxHTTPSrvConf", "ngxHTTPLocConf", "ngxConfBlock", "ngxConfExpr", "ngxConf1More"},
 			}
 		}
