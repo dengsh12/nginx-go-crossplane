@@ -2557,8 +2557,8 @@ func TestAnalyze_directiveSources_defaultBehavior(t *testing.T) {
 		ctx     blockCtx
 		wantErr bool
 	}{
-		// If `Directivesources` is not provided, `defaultDirectives` should be included.
-		// NPlus should be contained in `defaultDirectives`.
+		// If Directivesources is not provided, DefaultDirectivesMatchFunc should
+		// be used for validation. NPlus should be contained in it.
 		"DirectiveInNPlus_pass": {
 			&Directive{
 				Directive: "health_check",
@@ -2568,8 +2568,8 @@ func TestAnalyze_directiveSources_defaultBehavior(t *testing.T) {
 			blockCtx{"http", "location"},
 			false,
 		},
-		// If `Directivesources` is not provided, `defaultDirectives` should be included.
-		// NPlus should be contained in `defaultDirectives`.
+		// If Directivesources is not provided, DefaultDirectivesMatchFunc should
+		// be used for validation. NPlus should be contained in it.
 		// In this case the directive context dones't align with the bitmask definition,
 		// so it fails
 		"DirectiveInNPlus_fail": {

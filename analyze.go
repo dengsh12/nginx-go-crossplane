@@ -108,10 +108,10 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 		}
 	}
 
-	// If DirectiveSources was not provided, `defaultDirectives` will be included
+	// If DirectiveSources was not provided, DefaultDirectivesMatchFunc will be used
 	// for validation
 	if len(options.DirectiveSources) == 0 {
-		masks, knownDirective = defaultDirectives[directiveName]
+		masks, knownDirective = DefaultDirectivesMatchFunc(directiveName)
 	}
 
 	// if strict and directive isn't recognized then throw error

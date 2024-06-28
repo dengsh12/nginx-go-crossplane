@@ -104,12 +104,12 @@ type ParseOptions struct {
 	// If true, checks that directives have a valid number of arguments.
 	SkipDirectiveArgsCheck bool
 
-	// An array of MatchFunc, which is used to indicate the OSS/N+ version, and
+	// DirectiveSources is an array of MatchFunc, which is used to indicate the OSS/N+ version, and
 	// dynamic modules you want to include for validation. If a directive matches
 	// any of them, and satisfies the corresponding bitmask, it should pass the validation.
 	// If this is provided, it will be the only source of directives included for validation.
-	// If this is not provided, `defaultDirectives`(NPlus, Njs, and Otel in it) will be included
-	// for validation.
+	// If this is not provided, DefaultDirectivesMatchFunc(NPlus, Njs, and Otel in it) will be
+	// used for validation.
 	DirectiveSources []MatchFunc
 
 	LexOptions LexOptions
