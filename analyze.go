@@ -216,7 +216,7 @@ func unionBitmaskMaps(maps ...map[string][]uint) map[string][]uint {
 }
 
 // A default map for directives, used when ParseOptions.DirectiveSources is
-// not provided. It is union of latest Nplus, Njs, and Otel
+// not provided. It is union of latest Nplus, Njs, and Otel.
 //
 //nolint:gochecknoglobals
 var defaultDirectives = unionBitmaskMaps(ngxPlusLatestDirectives, moduleNjsDirectives, moduleOtelDirectives)
