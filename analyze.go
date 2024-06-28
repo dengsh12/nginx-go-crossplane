@@ -108,16 +108,10 @@ func analyze(fname string, stmt *Directive, term string, ctx blockCtx, options *
 		}
 	}
 
-	// If DirectiveSources was not provided, the default map will be included
+	// If DirectiveSources was not provided, `defaultDirectives` will be included
 	// for validation
 	if len(options.DirectiveSources) == 0 {
-		masks, knownDirective = directives[directiveName]
-	}
-
-	if knownDirective {
-		if m, found := directiveOverrides[directiveName]; found {
-			masks = m
-		}
+		masks, knownDirective = defaultDirectives[directiveName]
 	}
 
 	// if strict and directive isn't recognized then throw error
@@ -225,4 +219,9 @@ func unionBitmaskMaps(maps ...map[string][]uint) map[string][]uint {
 // not provided. It is union of latest Nplus, Njs, and Otel
 //
 //nolint:gochecknoglobals
-var directives = unionBitmaskMaps(ngxPlusLatestDirectives, moduleNjsDirectives, moduleOtelDirectives)
+var defaultDirectives = unionBitmaskMaps(ngxPlusLatestDirectives, moduleNjsDirectives, moduleOtelDirectives)
+
+func DefaultDirectivesMatchFunc(directive string) ([]uint, bool) {
+	masks, matched := defaultDirectives[directive]
+	return masks, matched
+}

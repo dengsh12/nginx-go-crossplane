@@ -2557,7 +2557,8 @@ func TestAnalyze_directiveSources_defaultBehavior(t *testing.T) {
 		ctx     blockCtx
 		wantErr bool
 	}{
-		// If Directivesources is not provided, the default map should include NPlus
+		// If `Directivesources` is not provided, `defaultDirectives` should be included.
+		// NPlus should be contained in `defaultDirectives`.
 		"DirectiveInNPlus_pass": {
 			&Directive{
 				Directive: "health_check",
@@ -2567,7 +2568,8 @@ func TestAnalyze_directiveSources_defaultBehavior(t *testing.T) {
 			blockCtx{"http", "location"},
 			false,
 		},
-		// If Directivesources is not provided, the default map should include NPlus.
+		// If `Directivesources` is not provided, `defaultDirectives` should be included.
+		// NPlus should be contained in `defaultDirectives`.
 		// In this case the directive context dones't align with the bitmask definition,
 		// so it fails
 		"DirectiveInNPlus_fail": {
@@ -2586,75 +2588,6 @@ func TestAnalyze_directiveSources_defaultBehavior(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			err := analyze("nginx.conf", tc.stmt, ";", tc.ctx, &ParseOptions{
-				ErrorOnUnknownDirectives: true,
-			})
-
-			if !tc.wantErr && err != nil {
-				t.Fatal(err)
-			}
-
-			if tc.wantErr && err == nil {
-				t.Fatal("expected error, got nil")
-			}
-		})
-	}
-}
-
-//nolint:funlen
-func TestAnalyze_forcedMap(t *testing.T) {
-	t.Parallel()
-	testcases := map[string]struct {
-		stmt    *Directive
-		ctx     blockCtx
-		wantErr bool
-	}{
-		// If a directive was defined in both forcedMap and DirectiveSources, the definition
-		// provided in Directivesources will be overwrite
-		"DirectiveInDirectiveSourcesAndForcedMap_pass": {
-			&Directive{
-				Directive: "if",
-				Args:      []string{"(", "a=b", ")"},
-				Line:      5,
-			},
-			blockCtx{"http", "location"},
-			false,
-		},
-		"DirectiveInDirectiveSourcesAndForcedMap_fail": {
-			&Directive{
-				Directive: "if",
-				Args:      []string{"("},
-				Line:      5,
-			},
-			blockCtx{"http", "location"},
-			true,
-		},
-		// If a directive was defined in both forcedMap and default map, the definition
-		// provided in default map will be overwrite
-		"DirectiveInDefaultMapAndForcedMap_pass": {
-			&Directive{
-				Directive: "if",
-				Args:      []string{"(", "a=b", ")"},
-				Line:      5,
-			},
-			blockCtx{"http", "location"},
-			false,
-		},
-		"DirectiveInDefaultMapAndForcedMap_fail": {
-			&Directive{
-				Directive: "if",
-				Args:      []string{"("},
-				Line:      5,
-			},
-			blockCtx{"http", "location"},
-			true,
-		},
-	}
-
-	for name, tc := range testcases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			err := analyze("nginx.conf", tc.stmt, "{", tc.ctx, &ParseOptions{
 				ErrorOnUnknownDirectives: true,
 			})
 

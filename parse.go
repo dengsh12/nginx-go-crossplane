@@ -108,7 +108,7 @@ type ParseOptions struct {
 	// dynamic modules you want to include for validation. If a directive matches
 	// any of them, and satisfies the corresponding bitmask, it should pass the validation.
 	// If this is provided, it will be the only source of directives included for validation.
-	// If this is not provided, a default map(NPlus, Njs, and Otel in it) will be included
+	// If this is not provided, `defaultDirectives`(NPlus, Njs, and Otel in it) will be included
 	// for validation.
 	DirectiveSources []MatchFunc
 
