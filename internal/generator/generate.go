@@ -1,6 +1,7 @@
 package generator
 
 import (
+	_ "embed"
 	"fmt"
 	"path"
 	"sort"
@@ -10,6 +11,15 @@ const (
 	ossRepo          = "https://github.com/nginx/nginx.git"
 	ossGenerateLimit = 3
 )
+
+// todo: not sure if we need it
+var sourceStr2Enum = map[string]source{
+	"OSS":         oSS,
+	"lua":         lua,
+	"headersMore": headsMore,
+	"njs":         njs,
+	"otel":        otel,
+}
 
 // todo: delete it
 func compare2directiveMap(correct map[string][]uint, generated map[string][]uint) {
@@ -79,8 +89,8 @@ func compare2directiveMapWithMatchFn(correct map[string][]uint, matchFn func(dir
 	}
 }
 
-// todo: delete it
-func testRun() {
+func TestRun() {
+
 	// compare2directiveMapWithMatchFn(crossplane.AppProtectWAFv5Directives, crossplane.AppProtectWAFv5DirectivesMatchFn)
 }
 
