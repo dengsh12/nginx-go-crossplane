@@ -17,35 +17,35 @@ type codeGenerator interface {
 	generateFromWeb() error
 }
 
-type normalGenerator struct {
+type normalGitGenerator struct {
 	// sourceName should be OSS, NPLUS, or the name of a dynamic module
 	sourceName string
 	repoURL    string
 }
 
 var source2generator = map[string]codeGenerator{
-	"lua": &normalGenerator{
+	"lua": &normalGitGenerator{
 		sourceName: "lua",
 		repoURL:    "https://github.com/openresty/lua-nginx-module.git",
 	},
-	"headersMore": &normalGenerator{
+	"headersMore": &normalGitGenerator{
 		sourceName: "headersMore",
 		repoURL:    "https://github.com/openresty/headers-more-nginx-module.git",
 	},
-	"njs": &normalGenerator{
+	"njs": &normalGitGenerator{
 		sourceName: "njs",
 		repoURL:    "https://github.com/nginx/njs.git",
 	},
-	"otel": &normalGenerator{
+	"otel": &normalGitGenerator{
 		sourceName: "otel",
 		repoURL:    "https://github.com/nginxinc/nginx-otel.git",
 	},
-	"OSS": &ossGenerator{
+	"OSS": &ossGitGenerator{
 		repoURL: "https://github.com/nginx/nginx.git",
 	},
 }
 
-func (generator *normalGenerator) generateFromWeb() error {
+func (generator *normalGitGenerator) generateFromWeb() error {
 	sourceName := generator.sourceName
 	repoURL := generator.repoURL
 
@@ -67,7 +67,7 @@ func (generator *normalGenerator) generateFromWeb() error {
 		return err
 	}
 
-	err = generateSupportFileFromCode(tmpDir, sourceName, getModuleMapName(sourceName), getModuleMatchFnName(sourceName), path.Join(projectRoot, getModuleFileName(sourceName)), nil)
+	err = genSupFromSrcCode(tmpDir, sourceName, getModuleMapName(sourceName), getModuleMatchFnName(sourceName), path.Join(projectRoot, getModuleFileName(sourceName)), nil)
 	if err != nil {
 		return err
 	}
@@ -75,11 +75,11 @@ func (generator *normalGenerator) generateFromWeb() error {
 	return nil
 }
 
-type ossGenerator struct {
+type ossGitGenerator struct {
 	repoURL string
 }
 
-func (generator *ossGenerator) generateFromWeb() error {
+func (generator *ossGitGenerator) generateFromWeb() error {
 	repoURL := generator.repoURL
 
 	tmpDir, err := os.MkdirTemp("", tmpDirPattern)
@@ -161,7 +161,7 @@ func (generator *ossGenerator) generateFromWeb() error {
 		}
 		matchFnName := fmt.Sprintf("Oss%sDirectivesMatchFn", ossVerStr)
 		fileName := fmt.Sprintf("./analyze_oss_%s_directives.go", lowercaseStrFirstChar(ossVerStr))
-		generateSupportFileFromCode(tmpDir, "OSS", fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName), filter)
+		genSupFromSrcCode(tmpDir, "OSS", fmt.Sprintf("ngxOss%sDirectives", ossVerStr), matchFnName, path.Join(projectRoot, fileName), filter)
 	}
 
 	return nil

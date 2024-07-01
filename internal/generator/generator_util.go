@@ -125,7 +125,7 @@ var directiveBlock2Context = map[string]string{
 }
 
 // Extract directives definitions from source code through regex
-func extractDirectiveDefFromFolder(rootPath string) (map[string][]bitDef, error) {
+func getDirectiveDefFromSrc(rootPath string) (map[string][]bitDef, error) {
 	directive2Defs := make(map[string][]bitDef, 0)
 	directivesDefBlockExtracter := regexp.MustCompile(extractNgxDirectiveArray)
 	singleDirectiveExtracter := regexp.MustCompile(extractNgxSingleDirective)
@@ -152,15 +152,15 @@ func extractDirectiveDefFromFolder(rootPath string) (map[string][]bitDef, error)
 			strContent = strings.ReplaceAll(strContent, "\r\n", "")
 			strContent = strings.ReplaceAll(strContent, "\n", "")
 
-			// Extract directives definition code blocks, each code block contains an array of directives definition
-			directiveBlocks := directivesDefBlockExtracter.FindAllStringSubmatch(strContent, -1)
+			// Extract directives definition code blocks, each code block contains a list of directives definition
+			directiveDefBlocks := directivesDefBlockExtracter.FindAllStringSubmatch(strContent, -1)
 			// Iterate through every code block
-			for _, directiveBlock := range directiveBlocks {
+			for _, block := range directiveDefBlocks {
 				// The name of the directives block in source code, it may be used as the context
-				directiveBlockName := directiveBlock[1]
+				blockName := block[1]
 				// Extract directives and their attributes in the code block, the first dimension of attributesList
 				// is index of directive, the second dimension is index of attributes
-				attributesList := singleDirectiveExtracter.FindAllStringSubmatch(directiveBlock[2], -1)
+				attributesList := singleDirectiveExtracter.FindAllStringSubmatch(block[2], -1)
 				// Iterate through every directive
 				for _, attributes := range attributesList {
 					// Extract attributes from the directive
@@ -179,10 +179,10 @@ func extractDirectiveDefFromFolder(rootPath string) (map[string][]bitDef, error)
 						}
 					}
 
-					// If the directive doesn't have context in source code, maybe we still have a human-defined context for it
-					// an example is directives in mgmt module, which was included in N+ R31
+					// If the directive doesn't have context in source code, maybe we still have a human-defined context for it.
+					// An example is directives in mgmt module, which was included in N+ R31
 					if !haveContext {
-						context, found := directiveBlock2Context[directiveBlockName]
+						context, found := directiveBlock2Context[blockName]
 						if found {
 							diretiveBitmasks = append(diretiveBitmasks, context)
 						}
@@ -254,8 +254,8 @@ func getLineSeperator() string {
 	return "\n"
 }
 
-func generateSupportFileFromCode(codePath string, sourceName string, mapVariableName string, mathFnName string, outputFilePath string, filter map[string]interface{}) error {
-	directive2BitDefs, err := extractDirectiveDefFromFolder(codePath)
+func genSupFromSrcCode(codePath string, sourceName string, mapVariableName string, mathFnName string, outputFilePath string, filter map[string]interface{}) error {
+	directive2BitDefs, err := getDirectiveDefFromSrc(codePath)
 	if err != nil {
 		return err
 	}
@@ -272,6 +272,7 @@ func generateSupportFileFromCode(codePath string, sourceName string, mapVariable
 		}
 	}
 
+	// For directives some sources, we have specific postprocess logics.
 	postProcFn, found := source2postProcFns[sourceName]
 	if found {
 		err = postProcFn(directive2BitDefs)
@@ -280,6 +281,7 @@ func generateSupportFileFromCode(codePath string, sourceName string, mapVariable
 		}
 	}
 
+	// Output the generated support file
 	directory := filepath.Dir(outputFilePath)
 	err = os.MkdirAll(directory, 0777)
 	if err != nil {

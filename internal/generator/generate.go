@@ -145,7 +145,7 @@ func Generate(function string, sourceName string, onlyDocumentedDirs bool, sourc
 				fmt.Println(err)
 			}
 		}
-		err = generateSupportFileFromCode(sourceCodePath, sourceName, getModuleMapName(sourceName), getModuleMatchFnName(sourceName), path.Join(outputFolder, getModuleFileName(sourceName)), filter)
+		err = genSupFromSrcCode(sourceCodePath, sourceName, getModuleMapName(sourceName), getModuleMatchFnName(sourceName), path.Join(outputFolder, getModuleFileName(sourceName)), filter)
 		if err != nil {
 			fmt.Println("Generate failed, error:")
 			fmt.Println(err.Error())
