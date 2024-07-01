@@ -17,6 +17,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+// todo: not sure if we need it
 type source string
 
 const (
@@ -42,7 +43,8 @@ const (
 	extractNgxSingleDirective = "ngx_string\\(\"(.*?)\"\\).*?,(.*?),"
 	extractSingleLineComment  = `//.*`
 	extractMultiLineComment   = `/\*[\s\S]*?\*/`
-	ngxMatchFnListFile        = "./ngx_matchFn_list.go"
+	// todo: delete it
+	ngxMatchFnListFile = "./ngx_matchFn_list.go"
 )
 
 type bitDef []string
