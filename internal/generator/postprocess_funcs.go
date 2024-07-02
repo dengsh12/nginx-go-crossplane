@@ -98,7 +98,7 @@ func postProcNgxNative(directives2Defs map[string][]bitDef) error {
 	// For OSS and NPlus source code, there are many undocumented directives.
 	// We don't provide supports for them
 	// Supported list here: https://nginx.org/en/docs/dirindex.html
-	documentedDirs, err := fetchDocumentedDirctives()
+	documentedDirs, err := fetchNgxDocumentedDirctives()
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func postProcNgxNative(directives2Defs map[string][]bitDef) error {
 	return nil
 }
 
-func fetchDocumentedDirctives() (map[string]interface{}, error) {
+func fetchNgxDocumentedDirctives() (map[string]interface{}, error) {
 	documentedDirectives := map[string]interface{}{}
 	documentURL := "https://nginx.org/en/docs/dirindex.html"
 

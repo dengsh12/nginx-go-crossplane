@@ -62,11 +62,24 @@ func TestGenSupFromSrcCode(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
+		path    string
 		wantErr bool
 	}{
 		{
-			name:    "lua",
+			name:    "lua_pass",
+			path:    "lua",
 			wantErr: false,
+		},
+		{
+			name:    "selfDefined_pass",
+			path:    "",
+			wantErr: false,
+		},
+		{
+			name: "undefinedBitmask_fail",
+		},
+		{
+			name: "noDirective",
 		},
 	}
 	for _, tc := range tests {
