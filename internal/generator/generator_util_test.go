@@ -59,6 +59,7 @@ func getExpectedFilePath(sourceName string) (string, error) {
 	return path.Join(root, "internal", "generator", "testdata", "expected", sourceName), nil
 }
 
+//nolint:funlen
 func TestGenSupFromSrcCode(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
