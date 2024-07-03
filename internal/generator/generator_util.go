@@ -181,11 +181,11 @@ func getDirectiveDefFromFile(path string) (map[string][]bitDef, error) {
 	return directive2Defs, nil
 }
 
-// Extract directives definitions from source code through regex.
-func getDirectiveDefFromSrc(srcPath string) (map[string][]bitDef, error) {
+// Extract directives definitions from source code folder through regex.
+func getDirectiveDefFromFolder(path string) (map[string][]bitDef, error) {
 	directive2Defs := make(map[string][]bitDef, 0)
 
-	err := filepath.WalkDir(srcPath, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -220,7 +220,7 @@ func getDirectiveDefFromSrc(srcPath string) (map[string][]bitDef, error) {
 }
 
 func genSupFromSrcCode(codePath string, mapVariableName string, mathFnName string, writer io.Writer) error {
-	directive2BitDefs, err := getDirectiveDefFromSrc(codePath)
+	directive2BitDefs, err := getDirectiveDefFromFolder(codePath)
 	if err != nil {
 		return err
 	}
