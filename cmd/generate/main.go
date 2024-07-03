@@ -10,6 +10,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 
 	"github.com/nginxinc/nginx-go-crossplane/internal/generator"
 )
@@ -19,7 +20,7 @@ func main() {
 		sourceCodePath = flag.String("src-directory", "", "the folder includes the source code your want to generate support from (required)")
 	)
 	flag.Parse()
-	err := generator.Generate(*sourceCodePath)
+	err := generator.Generate(*sourceCodePath, os.Stdout)
 	if err != nil {
 		log.Fatal(err)
 	}

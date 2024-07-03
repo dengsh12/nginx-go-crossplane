@@ -8,9 +8,13 @@
 package generator
 
 import (
-	"os"
+	"io"
 )
 
-func Generate(sourcePath string) error {
-	return genSupFromSrcCode(sourcePath, "directives", "Match", os.Stdout)
+// Generate receives a string sourcePath and an io.Writer writer. It will
+// extract all the directives definitions from the .c and .cpp files in
+// sourcePath and its subdirectories, then output the corresponding directive
+// definition map and matchFunc via writer.
+func Generate(sourcePath string, writer io.Writer) error {
+	return genFromSrcCode(sourcePath, "directives", "Match", writer)
 }

@@ -17,19 +17,24 @@
 package crossplane
 
 //nolint:gochecknoglobals
-var {{.MapVariableName}} = map[string][]uint{
-{{- range $name, $bitDefs := .Directive2Definitions}}
-    "{{$name}}": {{"{"}}
-    {{- range $bitDef := $bitDefs}}
-        {{Join $bitDef " | "}},
-    {{- end}}
-    {{"}"}},
-{{- end}}
+var directives = map[string][]uint{
+    "my_directive_1": {
+        ngxHTTPMainConf | ngxConfTake2,
+        ngxHTTPMainConf | ngxConfTake1,
+    },
+    "my_directive_2": {
+        ngxHTTPMainConf | ngxConfFlag,
+        ngxHTTPMainConf | ngxConfNoArgs,
+    },
+    "my_directive_3": {
+        ngxHTTPMainConf | ngxHTTPSrvConf | ngxConfNoArgs,
+        ngxHTTPMainConf | ngxConfTake2,
+    },
 }
 
-// {{.MatchFnName}} is a matchFunc for parsing an NGINX config that contains the
+// Match is a matchFunc for parsing an NGINX config that contains the
 // preceding directives.
-func {{.MatchFnName}}(directive string) ([]uint, bool) {
-    m, ok := {{.MapVariableName}}[directive]
+func Match(directive string) ([]uint, bool) {
+    m, ok := directives[directive]
     return m, ok
 }

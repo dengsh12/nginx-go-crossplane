@@ -96,6 +96,12 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			relativePath: "mgmtContext",
 			wantErr:      false,
 		},
+		// If one directive was defined in several files, we should keep all
+		// of the bitmask definitions
+		{
+			name:         "directiveRepeatDefine_pass",
+			relativePath: "repeatDefine",
+		},
 	}
 	for _, tc := range tests {
 		tc := tc
@@ -109,7 +115,7 @@ func TestGenSupFromSrcCode(t *testing.T) {
 
 			var buf bytes.Buffer
 
-			err = genSupFromSrcCode(codePath, "directives", "Match", &buf)
+			err = genFromSrcCode(codePath, "directives", "Match", &buf)
 
 			if !tc.wantErr && err != nil {
 				t.Fatal(err)

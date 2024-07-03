@@ -20,49 +20,44 @@ import (
 	"strings"
 )
 
-// regex.
-const (
+type bitDefinitions []string
+
+type supportFileTmplStruct struct {
+	Directive2Definitions map[string][]bitDefinitions
+	MapVariableName       string
+	MatchFnName           string
+}
+
+var (
 	// Extract single directive definition block
 	// static ngx_command_t  {name}[] = {definition}
 	// this regex extracts {name} and {definition}.
-	extractDirectivesDefBlock = "ngx_command_t\\s+(\\w+)\\[\\]\\s*=\\s*{(.*?)};"
+	directivesDefBlockExtracter = regexp.MustCompile(`ngx_command_t\s+(\w+)\[\]\s*=\s*{(.*?)};`)
 
 	// Extract one directive definition and attributes from extracted block
 	// { ngx_string({directive_name}),
 	//   {bitmask1|bitmask2|...},
 	//   ... },
 	// this regex extracts {directive_name} and {bitmask1|bitmask2|...}.
-	extractSingleDirective = "ngx_string\\(\"(.*?)\"\\).*?,(.*?),"
+	singleDirectiveExtracter = regexp.MustCompile(`ngx_string\("(.*?)"\).*?,(.*?),`)
 
-	extractSingleLineComment = `//.*`
+	singleLineCommentExtracter = regexp.MustCompile(`//.*`)
 
-	extractMultiLineComment = `/\*[\s\S]*?\*/`
+	multiLineCommentExtracter = regexp.MustCompile(`/\*[\s\S]*?\*/`)
 )
 
-type bitDef []string
-
-type supFileTmplStruct struct {
-	Directive2bitDefs map[string][]bitDef
-	MapVariableName   string
-	MatchFnName       string
-}
-
-var (
-	directivesDefBlockExtracter = regexp.MustCompile(extractDirectivesDefBlock)
-	singleDirectiveExtracter    = regexp.MustCompile(extractSingleDirective)
-	singleLineCommentExtracter  = regexp.MustCompile(extractSingleLineComment)
-	multiLineCommentExtracter   = regexp.MustCompile(extractMultiLineComment)
-)
-
+// Template of support file. A support file contains a map from
+// diective to its bitmask definitions, and a MatchFunc for it.
+//
 //go:embed tmpl/support_file.tmpl
-var supFileTmplStr string
+var supportFileTmplStr string
 
 //nolint:gochecknoglobals
-var supFileTmpl = template.Must(template.New("supFile").
-	Funcs(template.FuncMap{"Join": strings.Join}).Parse(supFileTmplStr))
+var supportFileTmpl = template.Must(template.New("supFile").
+	Funcs(template.FuncMap{"Join": strings.Join}).Parse(supportFileTmplStr))
 
 //nolint:gochecknoglobals
-var ngxBitmaskNameToGo = map[string]string{
+var ngxBitmaskToGo = map[string]string{
 	"NGX_MAIL_MAIN_CONF":   "ngxMailMainConf",
 	"NGX_STREAM_MAIN_CONF": "ngxStreamMainConf",
 	"NGX_CONF_TAKE1":       "ngxConfTake1",
@@ -97,22 +92,22 @@ var ngxBitmaskNameToGo = map[string]string{
 }
 
 //nolint:gochecknoglobals
-var allDirectiveContexts = map[string]interface{}{
-	"ngxMainConf":       nil,
-	"ngxEventConf":      nil,
-	"ngxMailMainConf":   nil,
-	"ngxMailSrvConf":    nil,
-	"ngxStreamMainConf": nil,
-	"ngxStreamSrvConf":  nil,
-	"ngxStreamUpsConf":  nil,
-	"ngxHTTPMainConf":   nil,
-	"ngxHTTPSrvConf":    nil,
-	"ngxHTTPLocConf":    nil,
-	"ngxHTTPUpsConf":    nil,
-	"ngxHTTPSifConf":    nil,
-	"ngxHTTPLifConf":    nil,
-	"ngxHTTPLmtConf":    nil,
-	"ngxMgmtMainConf":   nil,
+var allNgxContexts = map[string]struct{}{
+	"ngxMainConf":       {},
+	"ngxEventConf":      {},
+	"ngxMailMainConf":   {},
+	"ngxMailSrvConf":    {},
+	"ngxStreamMainConf": {},
+	"ngxStreamSrvConf":  {},
+	"ngxStreamUpsConf":  {},
+	"ngxHTTPMainConf":   {},
+	"ngxHTTPSrvConf":    {},
+	"ngxHTTPLocConf":    {},
+	"ngxHTTPUpsConf":    {},
+	"ngxHTTPSifConf":    {},
+	"ngxHTTPLifConf":    {},
+	"ngxHTTPLmtConf":    {},
+	"ngxMgmtMainConf":   {},
 }
 
 //nolint:gochecknoglobals
@@ -120,89 +115,88 @@ var directiveBlock2Context = map[string]string{
 	"ngx_mgmt_block_commands": "ngxMgmtMainConf",
 }
 
-func getDirectiveDefFromFile(path string) (map[string][]bitDef, error) {
-	directive2Defs := make(map[string][]bitDef, 0)
+func getDirectiveFromFile(path string) (directive2Definitions map[string][]bitDefinitions, err error) {
+	directive2Definitions = make(map[string][]bitDefinitions, 0)
 	byteContent, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	strContent := string(byteContent)
+
 	// Remove comments
 	strContent = singleLineCommentExtracter.ReplaceAllString(strContent, "")
 	strContent = multiLineCommentExtracter.ReplaceAllString(strContent, "")
-
 	strContent = strings.ReplaceAll(strContent, "\r\n", "")
 	strContent = strings.ReplaceAll(strContent, "\n", "")
 
 	// Extract directives definition code blocks, each code block contains a list of directives definition
 	directiveDefBlocks := directivesDefBlockExtracter.FindAllStringSubmatch(strContent, -1)
-	// Iterate through every code block
+
 	for _, block := range directiveDefBlocks {
 		// The name of the directives block in source code, it may be used as the context
 		blockName := block[1]
 		// Extract directives and their attributes in the code block, the first dimension of attributesList
 		// is index of directive, the second dimension is index of attributes
 		attributesList := singleDirectiveExtracter.FindAllStringSubmatch(block[2], -1)
+
 		// Iterate through every directive
 		for _, attributes := range attributesList {
 			// Extract attributes from the directive
 			directiveName := strings.TrimSpace(attributes[1])
-			diretiveBitmasks := strings.Split(attributes[2], "|")
+			directiveBitmasks := strings.Split(attributes[2], "|")
 			haveContext := false
 
-			for idx, bitmaskName := range diretiveBitmasks {
-				bitmaskGoName, found := ngxBitmaskNameToGo[strings.TrimSpace(bitmaskName)]
+			// transfer C-style diretiveBitmasks to go style
+			for idx, bitmask := range directiveBitmasks {
+				bitmaskGoName, found := ngxBitmaskToGo[strings.TrimSpace(bitmask)]
 				if !found {
-					return nil, fmt.Errorf("parsing directive %s, bitmask %s in source code not found in crossplane", directiveName, bitmaskName)
+					return nil, fmt.Errorf("parsing directive %s, bitmask %s in source code not found in crossplane", directiveName, bitmask)
 				}
-				diretiveBitmasks[idx] = bitmaskGoName
-				if _, found := allDirectiveContexts[bitmaskGoName]; found {
+				directiveBitmasks[idx] = bitmaskGoName
+				if _, found := allNgxContexts[bitmaskGoName]; found {
 					haveContext = true
 				}
 			}
 
 			// If the directive doesn't have context in source code, maybe we still have a human-defined context for it.
-			// An example is directives in mgmt module, which was included in N+ R31
+			// An example is directives in mgmt module, which was included in N+ R31, we add ngxMgmtMainConf for it
 			if !haveContext {
 				context, found := directiveBlock2Context[blockName]
 				if found {
-					diretiveBitmasks = append(diretiveBitmasks, context)
+					directiveBitmasks = append(directiveBitmasks, context)
 				}
 			}
 
-			if bitmaskDefList, exist := directive2Defs[directiveName]; exist {
-				bitmaskDefList = append(bitmaskDefList, diretiveBitmasks)
-				directive2Defs[directiveName] = bitmaskDefList
-			} else {
-				directive2Defs[directiveName] = []bitDef{diretiveBitmasks}
-			}
+			directive2Definitions[directiveName] = append(directive2Definitions[directiveName], directiveBitmasks)
+
 		}
 	}
-	return directive2Defs, nil
+	return directive2Definitions, nil
 }
 
-// Extract directives definitions from source code folder through regex.
-func getDirectiveDefFromFolder(path string) (map[string][]bitDef, error) {
-	directive2Defs := make(map[string][]bitDef, 0)
+func getDirectivesFromFolder(path string) (directive2Definitions map[string][]bitDefinitions, err error) {
+	directive2Definitions = make(map[string][]bitDefinitions, 0)
 
-	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
 		// Check if the entry is a C/C++ file
 		// Some dynamic modules are written in C++, like otel
-		if !d.IsDir() && (strings.HasSuffix(path, ".c") || strings.HasSuffix(path, ".cpp")) {
-			dir2defsInFile, err := getDirectiveDefFromFile(path)
-			if err != nil {
-				return err
-			}
-			for directive, defsInFile := range dir2defsInFile {
-				if _, found := directive2Defs[directive]; !found {
-					directive2Defs[directive] = []bitDef{}
-				}
-				directive2Defs[directive] = append(directive2Defs[directive], defsInFile...)
-			}
+		if d.IsDir() {
+			return nil
+		}
+
+		if !(strings.HasSuffix(path, ".c") || strings.HasSuffix(path, ".cpp")) {
+			return nil
+		}
+		dir2defsInFile, err := getDirectiveFromFile(path)
+		if err != nil {
+			return err
+		}
+		for directive, defsInFile := range dir2defsInFile {
+			directive2Definitions[directive] = append(directive2Definitions[directive], defsInFile...)
 		}
 
 		return nil
@@ -212,23 +206,23 @@ func getDirectiveDefFromFolder(path string) (map[string][]bitDef, error) {
 		return nil, err
 	}
 
-	if len(directive2Defs) == 0 {
+	if len(directive2Definitions) == 0 {
 		return nil, errors.New("can't find any directives in the directory and subdirectories, please check the path")
 	}
 
-	return directive2Defs, nil
+	return directive2Definitions, nil
 }
 
-func genSupFromSrcCode(codePath string, mapVariableName string, mathFnName string, writer io.Writer) error {
-	directive2BitDefs, err := getDirectiveDefFromFolder(codePath)
+func genFromSrcCode(codePath string, mapVariableName string, matchFnName string, writer io.Writer) error {
+	directive2Definitions, err := getDirectivesFromFolder(codePath)
 	if err != nil {
 		return err
 	}
 
-	err = supFileTmpl.Execute(writer, supFileTmplStruct{
-		Directive2bitDefs: directive2BitDefs,
-		MapVariableName:   mapVariableName,
-		MatchFnName:       mathFnName,
+	err = supportFileTmpl.Execute(writer, supportFileTmplStruct{
+		Directive2Definitions: directive2Definitions,
+		MapVariableName:       mapVariableName,
+		MatchFnName:           matchFnName,
 	})
 	if err != nil {
 		return err
