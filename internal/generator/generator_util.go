@@ -115,6 +115,7 @@ var directiveBlock2Context = map[string]string{
 	"ngx_mgmt_block_commands": "ngxMgmtMainConf",
 }
 
+//nolint:nonamedreturns
 func getDirectiveFromFile(path string) (directive2Definitions map[string][]bitDefinitions, err error) {
 	directive2Definitions = make(map[string][]bitDefinitions, 0)
 	byteContent, err := os.ReadFile(path)
@@ -168,12 +169,12 @@ func getDirectiveFromFile(path string) (directive2Definitions map[string][]bitDe
 			}
 
 			directive2Definitions[directiveName] = append(directive2Definitions[directiveName], directiveBitmasks)
-
 		}
 	}
 	return directive2Definitions, nil
 }
 
+//nolint:nonamedreturns
 func getDirectivesFromFolder(path string) (directive2Definitions map[string][]bitDefinitions, err error) {
 	directive2Definitions = make(map[string][]bitDefinitions, 0)
 
