@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) F5, Inc.
+ *
+ * This source code is licensed under the Apache License, Version 2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package generator
 
 import (
@@ -193,13 +200,6 @@ func genSupFromSrcCode(codePath string, mapVariableName string, mathFnName strin
 	directive2BitDefs, err := getDirectiveDefFromSrc(codePath)
 	if err != nil {
 		return err
-	}
-
-	for _, postProcessFunc := range postProcessFuncs {
-		err = postProcessFunc(directive2BitDefs)
-		if err != nil {
-			return err
-		}
 	}
 
 	err = supFileTmpl.Execute(writer, supFileTmplStruct{

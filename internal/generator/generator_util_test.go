@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) F5, Inc.
+ *
+ * This source code is licensed under the Apache License, Version 2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package generator
 
 import (
@@ -28,18 +35,12 @@ func getProjectRootAbsPath() (string, error) {
 	return rootDir, nil
 }
 
-func compareFiles(file1, file2 *os.File) (bool, error) {
-	b1, err := io.ReadAll(file1)
-	if err != nil {
-		return false, fmt.Errorf("failed to read file1: %w", err)
-	}
-
-	b2, err := io.ReadAll(file2)
+func validateTestOut(output []byte, expected *os.File) (bool, error) {
+	b2, err := io.ReadAll(expected)
 	if err != nil {
 		return false, fmt.Errorf("failed to read file2: %w", err)
 	}
-
-	return bytes.Equal(b1, b2), nil
+	return bytes.Equal(output, b2), nil
 }
 
 func getTestSrcCodePath(sourceName string) (string, error) {
@@ -61,25 +62,37 @@ func getExpectedFilePath(sourceName string) (string, error) {
 func TestGenSupFromSrcCode(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name    string
-		path    string
-		wantErr bool
+		name         string
+		relativePath string
+		wantErr      bool
 	}{
 		{
-			name:    "lua_pass",
-			path:    "lua",
-			wantErr: false,
+			name:         "lua_pass",
+			relativePath: "lua",
+			wantErr:      false,
 		},
 		{
-			name:    "selfDefined_pass",
-			path:    "",
-			wantErr: false,
+			name:         "normalDirectiveDefinition_pass",
+			relativePath: "normalDefinition",
+			wantErr:      false,
 		},
 		{
-			name: "undefinedBitmask_fail",
+			name:         "unknownBitmask_fail",
+			relativePath: "unknownBitmask",
+			wantErr:      true,
 		},
 		{
-			name: "noDirective",
+			name:         "noDirectivesDefinition_fail",
+			relativePath: "noDirectives",
+			wantErr:      true,
+		},
+		// For directives defined in ngx_mgmt_block_commands, there is not
+		// context bitmask for them in source code. We added a ngxMgmtMainConf
+		// to it in crossplane.
+		{
+			name:         "mgmtContext_pass",
+			relativePath: "mgmtContext",
+			wantErr:      false,
 		},
 	}
 	for _, tc := range tests {
@@ -87,19 +100,14 @@ func TestGenSupFromSrcCode(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			var err error
-			codePath, err := getTestSrcCodePath(tc.name)
+			codePath, err := getTestSrcCodePath(tc.relativePath)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			outputFile, err := os.CreateTemp("", "TestGenSupFromSrcCode_")
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer os.Remove(outputFile.Name())
-			defer outputFile.Close()
+			var buf bytes.Buffer
 
-			err = genSupFromSrcCode(codePath, "directives", "Match", outputFile)
+			err = genSupFromSrcCode(codePath, "directives", "Match", &buf)
 
 			if !tc.wantErr && err != nil {
 				t.Fatal(err)
@@ -109,13 +117,13 @@ func TestGenSupFromSrcCode(t *testing.T) {
 				t.Fatal("expected error, got nil")
 			}
 
-			err = outputFile.Sync()
-
+			// If the testcase wants an error and there is an error, skip the output file validation,
+			// since there may not be an output file while error occurs in generation.
 			if err != nil {
-				t.Fatal(err)
+				return
 			}
 
-			expectedFilePth, err := getExpectedFilePath(tc.name)
+			expectedFilePth, err := getExpectedFilePath(tc.relativePath)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -125,13 +133,7 @@ func TestGenSupFromSrcCode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			// Reset the file pointer to the beginning of the file, so that we can read from it
-			_, err = outputFile.Seek(0, 0)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			res, err := compareFiles(outputFile, expectedFile)
+			res, err := validateTestOut(buf.Bytes(), expectedFile)
 			if err != nil {
 				t.Fatal(err)
 			}
