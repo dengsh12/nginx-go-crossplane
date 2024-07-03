@@ -53,7 +53,7 @@ var (
 var supportFileTmplStr string
 
 //nolint:gochecknoglobals
-var supportFileTmpl = template.Must(template.New("supFile").
+var supportFileTmpl = template.Must(template.New("supportFile").
 	Funcs(template.FuncMap{"Join": strings.Join}).Parse(supportFileTmplStr))
 
 //nolint:gochecknoglobals
@@ -134,7 +134,7 @@ func getDirectiveFromFile(path string) (directive2Definitions map[string][]bitDe
 	directiveDefBlocks := directivesDefBlockExtracter.FindAllStringSubmatch(strContent, -1)
 
 	for _, block := range directiveDefBlocks {
-		// The name of the directives block in source code, it may be used as the context
+		// The name of the directives block in source code, it may be used to determine the context
 		blockName := block[1]
 		// Extract directives and their attributes in the code block, the first dimension of attributesList
 		// is index of directive, the second dimension is index of attributes
@@ -147,7 +147,7 @@ func getDirectiveFromFile(path string) (directive2Definitions map[string][]bitDe
 			directiveBitmasks := strings.Split(attributes[2], "|")
 			haveContext := false
 
-			// transfer C-style diretiveBitmasks to go style
+			// Transfer C-style diretiveBitmasks to go style
 			for idx, bitmask := range directiveBitmasks {
 				bitmaskGoName, found := ngxBitmaskToGo[strings.TrimSpace(bitmask)]
 				if !found {
@@ -192,11 +192,13 @@ func getDirectivesFromFolder(path string) (directive2Definitions map[string][]bi
 		if !(strings.HasSuffix(path, ".c") || strings.HasSuffix(path, ".cpp")) {
 			return nil
 		}
-		dir2defsInFile, err := getDirectiveFromFile(path)
+
+		directive2DefinitionsInFile, err := getDirectiveFromFile(path)
 		if err != nil {
 			return err
 		}
-		for directive, defsInFile := range dir2defsInFile {
+
+		for directive, defsInFile := range directive2DefinitionsInFile {
 			directive2Definitions[directive] = append(directive2Definitions[directive], defsInFile...)
 		}
 
