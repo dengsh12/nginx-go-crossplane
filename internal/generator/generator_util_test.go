@@ -9,6 +9,7 @@ package generator
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -21,7 +22,7 @@ import (
 func getProjectRootAbsPath() (string, error) {
 	_, filePath, _, ok := runtime.Caller(0)
 	if !ok {
-		return "", fmt.Errorf("can't get path of generator_util_test.go through runtime")
+		return "", errors.New("can't get path of generator_util_test.go through runtime")
 	}
 	absPath, err := filepath.Abs(filePath)
 	if err != nil {

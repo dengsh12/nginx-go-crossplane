@@ -9,6 +9,7 @@ package generator
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -19,18 +20,18 @@ import (
 	"strings"
 )
 
-// regex
+// regex.
 const (
 	// Extract single directive definition block
 	// static ngx_command_t  {name}[] = {definition}
-	// this regex extracts {name} and {definition}
+	// this regex extracts {name} and {definition}.
 	extractDirectivesDefBlock = "ngx_command_t\\s+(\\w+)\\[\\]\\s*=\\s*{(.*?)};"
 
 	// Extract one directive definition and attributes from extracted block
 	// { ngx_string({directive_name}),
 	//   {bitmask1|bitmask2|...},
 	//   ... },
-	// this regex extracts {directive_name} and {bitmask1|bitmask2|...}
+	// this regex extracts {directive_name} and {bitmask1|bitmask2|...}.
 	extractSingleDirective = "ngx_string\\(\"(.*?)\"\\).*?,(.*?),"
 
 	extractSingleLineComment = `//.*`
@@ -46,7 +47,6 @@ type supFileTmplStruct struct {
 	MatchFnName       string
 }
 
-//nolint:gochecknoglobals
 var (
 	directivesDefBlockExtracter = regexp.MustCompile(extractDirectivesDefBlock)
 	singleDirectiveExtracter    = regexp.MustCompile(extractSingleDirective)
@@ -120,7 +120,6 @@ var directiveBlock2Context = map[string]string{
 	"ngx_mgmt_block_commands": "ngxMgmtMainConf",
 }
 
-//nolint:funlen
 func getDirectiveDefFromFile(path string) (map[string][]bitDef, error) {
 	directive2Defs := make(map[string][]bitDef, 0)
 	byteContent, err := os.ReadFile(path)
@@ -182,9 +181,7 @@ func getDirectiveDefFromFile(path string) (map[string][]bitDef, error) {
 	return directive2Defs, nil
 }
 
-// Extract directives definitions from source code through regex
-//
-//nolint:funlen
+// Extract directives definitions from source code through regex.
 func getDirectiveDefFromSrc(srcPath string) (map[string][]bitDef, error) {
 	directive2Defs := make(map[string][]bitDef, 0)
 
@@ -216,13 +213,12 @@ func getDirectiveDefFromSrc(srcPath string) (map[string][]bitDef, error) {
 	}
 
 	if len(directive2Defs) == 0 {
-		return nil, fmt.Errorf("can't find any directives in the directory and subdirectories, please check the path")
+		return nil, errors.New("can't find any directives in the directory and subdirectories, please check the path")
 	}
 
 	return directive2Defs, nil
 }
 
-//nolint:funlen
 func genSupFromSrcCode(codePath string, mapVariableName string, mathFnName string, writer io.Writer) error {
 	directive2BitDefs, err := getDirectiveDefFromSrc(codePath)
 	if err != nil {
