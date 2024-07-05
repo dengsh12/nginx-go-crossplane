@@ -10,7 +10,6 @@ package generator
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -34,14 +33,6 @@ func getProjectRootAbsPath() (string, error) {
 	rootDir = filepath.Dir(rootDir)
 
 	return rootDir, nil
-}
-
-func validateTestOut(output []byte, expected *os.File) (bool, error) {
-	b2, err := io.ReadAll(expected)
-	if err != nil {
-		return false, fmt.Errorf("failed to read file2: %w", err)
-	}
-	return bytes.Equal(output, b2), nil
 }
 
 func getTestSrcCodePath(sourceName string) (string, error) {
@@ -102,6 +93,11 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			name:         "directiveRepeatDefine_pass",
 			relativePath: "repeatDefine",
 		},
+		// If there are comments in definition, we should delete them
+		{
+			name:         "commentsInDefinition_pass",
+			relativePath: "commentsInDefinition",
+		},
 	}
 	for _, tc := range tests {
 		tc := tc
@@ -141,12 +137,20 @@ func TestGenSupFromSrcCode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			res, err := validateTestOut(buf.Bytes(), expectedFile)
+			expected, err := io.ReadAll(expectedFile)
 			if err != nil {
 				t.Fatal(err)
 			}
+
+			res := bytes.Equal(buf.Bytes(), expected)
+			if err != nil {
+				t.Fatal(err)
+			}
+
 			if res == false {
-				t.Fatal("output not align with expectation")
+				t.Fatalf(
+					"output not align with expectation, output:\n %s \nexpected:\n %s ",
+					string(buf.String()), string(expected))
 			}
 		})
 	}
