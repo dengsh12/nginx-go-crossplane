@@ -54,6 +54,7 @@ func getExpectedFilePath(sourceName string) (string, error) {
 	return path.Join(root, "internal", "generator", "testdata", "expected", sourceName), nil
 }
 
+//nolint:gochecknoglobals
 var (
 	update = flag.Bool("update", false,
 		`update the expected output of these tests, 
@@ -65,7 +66,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-//nolint:funlen
+//nolint:funlen,gocognit
 func TestGenSupFromSrcCode(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -152,7 +153,10 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			}
 
 			if *update {
-				expectedFile.WriteString(buf.String())
+				_, err = expectedFile.WriteString(buf.String())
+				if err != nil {
+					t.Fatal(err)
+				}
 				expectedFile.Close()
 				return
 			}
