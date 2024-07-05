@@ -16,6 +16,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func getProjectRootAbsPath() (string, error) {
@@ -141,17 +143,7 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			res := bytes.Equal(buf.Bytes(), expected)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if res == false {
-				t.Fatalf(
-					"output not align with expectation, output:\n %s \nexpected:\n %s ",
-					buf.String(), string(expected))
-			}
+			require.Equal(t, string(expected), buf.String())
 		})
 	}
 }
