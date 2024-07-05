@@ -150,7 +150,7 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			if res == false {
 				t.Fatalf(
 					"output not align with expectation, output:\n %s \nexpected:\n %s ",
-					string(buf.String()), string(expected))
+					buf.String(), string(expected))
 			}
 		})
 	}
