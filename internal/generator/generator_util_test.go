@@ -10,6 +10,7 @@ package generator
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"io"
 	"os"
 	"path"
@@ -51,6 +52,17 @@ func getExpectedFilePath(sourceName string) (string, error) {
 		return "", err
 	}
 	return path.Join(root, "internal", "generator", "testdata", "expected", sourceName), nil
+}
+
+var (
+	update = flag.Bool("update", false,
+		`update the expected output of these tests, 
+only use when the expected output is outdated and you are sure your output is correct`)
+)
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	os.Exit(m.Run())
 }
 
 //nolint:funlen
@@ -134,9 +146,15 @@ func TestGenSupFromSrcCode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			expectedFile, err := os.Open(expectedFilePth)
+			expectedFile, err := os.OpenFile(expectedFilePth, os.O_RDWR|os.O_CREATE, 0644)
 			if err != nil {
 				t.Fatal(err)
+			}
+
+			if *update {
+				expectedFile.WriteString(buf.String())
+				expectedFile.Close()
+				return
 			}
 
 			expected, err := io.ReadAll(expectedFile)
