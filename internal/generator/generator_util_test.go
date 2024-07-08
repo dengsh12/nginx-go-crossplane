@@ -147,13 +147,14 @@ func TestGenSupFromSrcCode(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if *update {
-				_, err = expectedFile.WriteString(buf.String())
-				if err != nil {
+			defer func() {
+				if err := expectedFile.Close(); err != nil {
 					t.Fatal(err)
 				}
+			}()
 
-				err = expectedFile.Close()
+			if *update {
+				_, err = expectedFile.WriteString(buf.String())
 				if err != nil {
 					t.Fatal(err)
 				}
