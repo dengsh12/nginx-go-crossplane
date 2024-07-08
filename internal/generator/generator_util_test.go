@@ -29,6 +29,11 @@ var (
 only use when the expected output is outdated and you are sure your output is correct`)
 )
 
+func TestMain(m *testing.M) {
+	flag.Parse()
+	os.Exit(m.Run())
+}
+
 func getProjectRootAbsPath() (string, error) {
 	_, filePath, _, ok := runtime.Caller(0)
 	if !ok {
@@ -62,11 +67,6 @@ func getExpectedFilePath(relativePath string) (string, error) {
 	relativePath = strings.TrimSuffix(relativePath, ".c")
 	relativePath = strings.TrimSuffix(relativePath, ".cpp")
 	return path.Join(root, "internal", "generator", "testdata", "expected", relativePath), nil
-}
-
-func TestMain(m *testing.M) {
-	flag.Parse()
-	os.Exit(m.Run())
 }
 
 //nolint:funlen,gocognit
