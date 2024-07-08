@@ -16,6 +16,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -38,20 +39,22 @@ func getProjectRootAbsPath() (string, error) {
 	return rootDir, nil
 }
 
-func getTestSrcCodePath(sourceName string) (string, error) {
+func getTestSrcCodePath(relativePath string) (string, error) {
 	root, err := getProjectRootAbsPath()
 	if err != nil {
 		return "", err
 	}
-	return path.Join(root, "internal", "generator", "testdata", "source_codes", sourceName), nil
+	return path.Join(root, "internal", "generator", "testdata", "source_codes", relativePath), nil
 }
 
-func getExpectedFilePath(sourceName string) (string, error) {
+func getExpectedFilePath(relativePath string) (string, error) {
 	root, err := getProjectRootAbsPath()
 	if err != nil {
 		return "", err
 	}
-	return path.Join(root, "internal", "generator", "testdata", "expected", sourceName), nil
+	relativePath = strings.TrimSuffix(relativePath, ".c")
+	relativePath = strings.TrimSuffix(relativePath, ".cpp")
+	return path.Join(root, "internal", "generator", "testdata", "expected", relativePath), nil
 }
 
 //nolint:gochecknoglobals
@@ -75,11 +78,6 @@ func TestGenSupFromSrcCode(t *testing.T) {
 		wantErr      bool
 	}{
 		{
-			name:         "lua_pass",
-			relativePath: "lua",
-			wantErr:      false,
-		},
-		{
 			name:         "normalDirectiveDefinition_pass",
 			relativePath: "normalDefinition",
 			wantErr:      false,
@@ -94,14 +92,6 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			relativePath: "noDirectives",
 			wantErr:      true,
 		},
-		// For directives defined in ngx_mgmt_block_commands, there is not
-		// context bitmask for them in source code. We added a ngxMgmtMainConf
-		// to it in crossplane.
-		{
-			name:         "mgmtContext_pass",
-			relativePath: "mgmtContext",
-			wantErr:      false,
-		},
 		// If one directive was defined in several files, we should keep all
 		// of the bitmask definitions
 		{
@@ -112,6 +102,11 @@ func TestGenSupFromSrcCode(t *testing.T) {
 		{
 			name:         "commentsInDefinition_pass",
 			relativePath: "commentsInDefinition",
+		},
+		// If there are comments in definition, we should delete them
+		{
+			name:         "genFromSingleFile_pass",
+			relativePath: "single_file.c",
 		},
 	}
 	for _, tc := range tests {

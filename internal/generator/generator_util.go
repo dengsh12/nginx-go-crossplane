@@ -114,11 +114,6 @@ var allNgxContexts = map[string]struct{}{
 	"ngxMgmtMainConf":   {},
 }
 
-//nolint:gochecknoglobals
-var directiveBlock2Context = map[string]string{
-	"ngx_mgmt_block_commands": "ngxMgmtMainConf",
-}
-
 //nolint:nonamedreturns
 func masksFromFile(path string) (directive2Masks map[string][]mask, err error) {
 	directive2Masks = make(map[string][]mask, 0)
@@ -138,8 +133,6 @@ func masksFromFile(path string) (directive2Masks map[string][]mask, err error) {
 	blocks := directivesDefineBlockExtracter.FindAllStringSubmatch(strContent, -1)
 
 	for _, block := range blocks {
-		// The name of the directives block in source code, it may be used to determine the context
-		blockName := block[1]
 		// Extract directives and their attributes in the code block, the first dimension of subBlocks
 		// is index of directive, the second dimension is index of attributes
 		subBlocks := singleDirectiveExtracter.FindAllStringSubmatch(block[2], -1)
@@ -149,7 +142,6 @@ func masksFromFile(path string) (directive2Masks map[string][]mask, err error) {
 			// Extract attributes from the directive
 			directiveName := strings.TrimSpace(attributes[1])
 			directiveMask := strings.Split(attributes[2], "|")
-			contextSet := false
 
 			// Transfer C-style mask to go style
 			for idx, ngxVarName := range directiveMask {
@@ -158,18 +150,6 @@ func masksFromFile(path string) (directive2Masks map[string][]mask, err error) {
 					return nil, fmt.Errorf("parsing directive %s, bitmask %s in source code not found in crossplane", directiveName, ngxVarName)
 				}
 				directiveMask[idx] = goVarName
-				if _, found := allNgxContexts[goVarName]; found {
-					contextSet = true
-				}
-			}
-
-			// If the directive doesn't have context in source code, maybe we still have a human-defined context for it.
-			// An example is directives in mgmt module, which was included in N+ R31, we add ngxMgmtMainConf for it
-			if !contextSet {
-				context, found := directiveBlock2Context[blockName]
-				if found {
-					directiveMask = append(directiveMask, context)
-				}
 			}
 
 			directive2Masks[directiveName] = append(directive2Masks[directiveName], directiveMask)
@@ -179,7 +159,7 @@ func masksFromFile(path string) (directive2Masks map[string][]mask, err error) {
 }
 
 //nolint:nonamedreturns
-func getMasksFromFolder(path string) (directive2Masks map[string][]mask, err error) {
+func getMasksFromPath(path string) (directive2Masks map[string][]mask, err error) {
 	directive2Masks = make(map[string][]mask, 0)
 
 	err = filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
@@ -221,7 +201,7 @@ func getMasksFromFolder(path string) (directive2Masks map[string][]mask, err err
 }
 
 func genFromSrcCode(codePath string, mapVariableName string, matchFnName string, writer io.Writer) error {
-	directive2Masks, err := getMasksFromFolder(codePath)
+	directive2Masks, err := getMasksFromPath(codePath)
 	if err != nil {
 		return err
 	}
