@@ -95,25 +95,6 @@ var ngxVarNameToGo = map[string]string{
 	"NGX_CONF_TAKE4":       "ngxConfTake4",
 }
 
-//nolint:gochecknoglobals
-var allNgxContexts = map[string]struct{}{
-	"ngxMainConf":       {},
-	"ngxEventConf":      {},
-	"ngxMailMainConf":   {},
-	"ngxMailSrvConf":    {},
-	"ngxStreamMainConf": {},
-	"ngxStreamSrvConf":  {},
-	"ngxStreamUpsConf":  {},
-	"ngxHTTPMainConf":   {},
-	"ngxHTTPSrvConf":    {},
-	"ngxHTTPLocConf":    {},
-	"ngxHTTPUpsConf":    {},
-	"ngxHTTPSifConf":    {},
-	"ngxHTTPLifConf":    {},
-	"ngxHTTPLmtConf":    {},
-	"ngxMgmtMainConf":   {},
-}
-
 //nolint:nonamedreturns
 func masksFromFile(path string) (directive2Masks map[string][]mask, err error) {
 	directive2Masks = make(map[string][]mask, 0)
