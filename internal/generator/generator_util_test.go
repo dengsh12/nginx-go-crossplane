@@ -22,6 +22,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:gochecknoglobals
+var (
+	update = flag.Bool("update", false,
+		`update the expected output of these tests, 
+only use when the expected output is outdated and you are sure your output is correct`)
+)
+
 func getProjectRootAbsPath() (string, error) {
 	_, filePath, _, ok := runtime.Caller(0)
 	if !ok {
@@ -56,13 +63,6 @@ func getExpectedFilePath(relativePath string) (string, error) {
 	relativePath = strings.TrimSuffix(relativePath, ".cpp")
 	return path.Join(root, "internal", "generator", "testdata", "expected", relativePath), nil
 }
-
-//nolint:gochecknoglobals
-var (
-	update = flag.Bool("update", false,
-		`update the expected output of these tests, 
-only use when the expected output is outdated and you are sure your output is correct`)
-)
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -148,7 +148,7 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			}
 
 			defer func() {
-				if err := expectedFile.Close(); err != nil {
+				if err = expectedFile.Close(); err != nil {
 					t.Fatal(err)
 				}
 			}()
