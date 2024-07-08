@@ -17,7 +17,8 @@ import (
 
 func main() {
 	var (
-		sourceCodePath = flag.String("src-path", "", "the path of source code your want to generate support from, it can be either a file or a directory. (required)")
+		sourceCodePath = flag.String("src-path", "",
+			"the path of source code your want to generate support from, it can be either a file or a directory. (required)")
 	)
 	flag.Parse()
 	err := generator.Generate(*sourceCodePath, os.Stdout)
