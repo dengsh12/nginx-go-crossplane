@@ -108,6 +108,10 @@ func TestGenSupFromSrcCode(t *testing.T) {
 			name:         "genFromSingleFile_pass",
 			relativePath: "single_file.c",
 		},
+		{
+			name:         "fullNgxBitmaskCover_pass",
+			relativePath: "fullNgxBitmaskCover",
+		},
 	}
 	for _, tc := range tests {
 		tc := tc

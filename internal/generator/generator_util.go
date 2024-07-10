@@ -93,6 +93,9 @@ var ngxVarNameToGo = map[string]string{
 	"NGX_CONF_TAKE13":      "ngxConfTake13",
 	"NGX_CONF_ANY":         "ngxConfAny",
 	"NGX_CONF_TAKE4":       "ngxConfTake4",
+	"NGX_CONF_TAKE5":       "ngxConfTake5",
+	"NGX_CONF_TAKE6":       "ngxConfTake6",
+	"NGX_CONF_TAKE7":       "ngxConfTake7",
 }
 
 //nolint:nonamedreturns
