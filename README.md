@@ -74,7 +74,7 @@ func main() {
 ```
 
 # Generate support for third-party modules
-This is an example that generates support for a third-party module. Assume the source code path of that module is `./src`. You can run `go run cmd/generate/main.go ./src`. The stdout will be like
+This is an example that takes the path of a third-party module source code to generate support for it. Assume the source code path of that module is `./src`. You can call `go run cmd/generate/main.go ./src`. The stdout will be like
 
 ```go
 /**
